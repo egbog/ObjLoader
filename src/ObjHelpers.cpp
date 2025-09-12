@@ -270,7 +270,7 @@ void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, uns
       meshes.emplace_back();
 
       // Pre-reserve per-mesh vectors based on first-pass counts
-      if (meshCount < static_cast<int>(verticesPerMesh.size())) {
+      if (int size = static_cast<int>(verticesPerMesh.size()); meshCount < size) {
         t_state.tempMeshes[meshCount].vertices.reserve(verticesPerMesh[meshCount]);
         t_state.tempMeshes[meshCount].texCoords.reserve(texPerMesh[meshCount]);
         t_state.tempMeshes[meshCount].normals.reserve(normalsPerMesh[meshCount]);
