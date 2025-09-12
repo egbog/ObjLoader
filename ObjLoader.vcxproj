@@ -52,7 +52,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -150,7 +150,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\Ryan\GitHub\ObjLoader;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Ryan\GitHub\ObjLoader\include;C:\Users\Ryan\GitHub\ObjLoader\external;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
