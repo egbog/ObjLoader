@@ -182,8 +182,7 @@ void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
 //  //inFile.close();
 //}
 
-void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, unsigned int t_lodLevel) {
-  std::vector<Mesh>& meshes    = GetMeshContainer(t_state, t_lodLevel);
+void ObjHelpers::ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, const std::string& t_buffer, const unsigned int t_lodLevel) {
   int                meshCount = -1;
 
   const char* data = t_buffer.data();
@@ -241,7 +240,7 @@ void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, uns
 
   // Pre-reserve tempMeshes and meshes vectors
   t_state.tempMeshes.reserve(meshEstimate);
-  meshes.reserve(meshEstimate);
+  t_meshes.reserve(meshEstimate);
 
   // --- Second pass: actual parsing ---
   data = t_buffer.data();
@@ -267,7 +266,7 @@ void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, uns
       meshCount++;
 
       t_state.tempMeshes.emplace_back();
-      meshes.emplace_back();
+      t_meshes.emplace_back();
 
       // Pre-reserve per-mesh vectors based on first-pass counts
       if (int size = static_cast<int>(verticesPerMesh.size()); meshCount < size) {
@@ -277,9 +276,9 @@ void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, uns
         t_state.tempMeshes[meshCount].faceIndices.reserve(facesPerMesh[meshCount] * 3); // 3 indices per face
       }
 
-      meshes[meshCount].name       = meshName;
-      meshes[meshCount].meshNumber = meshCount;
-      meshes[meshCount].lodLevel   = t_lodLevel;
+      t_meshes[meshCount].name       = meshName;
+      t_meshes[meshCount].meshNumber = meshCount;
+      t_meshes[meshCount].lodLevel   = t_lodLevel;
     }
     else if (line.starts_with("v ")) {
       const char* ptr = line.data() + 2;
@@ -302,7 +301,7 @@ void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, uns
       t_state.tempMeshes[meshCount].normals.emplace_back(x, y, z);
     }
     else if (line.starts_with("usemtl")) {
-      meshes[meshCount].material = std::string(line.substr(7));
+      t_meshes[meshCount].material = std::string(line.substr(7));
     }
     else if (line.starts_with("mtllib")) {
       t_state.mtlFileName = std::string(line.substr(7));
@@ -329,7 +328,6 @@ void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, uns
     }
   }
 }
-
 
 //void ObjHelpers::ParseMtl(LoaderState& t_state, const std::string& t_buffer) {
 //  // load mtl
@@ -505,24 +503,22 @@ std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const std::span<Ver
   return {tangent1, bitangent1};
 }
 
-void ObjHelpers::Triangulate(LoaderState& t_state, const unsigned int t_lodLevel) {
-  std::vector<Mesh>& vec = GetMeshContainer(t_state, t_lodLevel);
-
-  for (unsigned int a = 0; a < vec.size(); ++a) {
+void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes, const unsigned int t_lodLevel) {
+  for (unsigned int a = 0; a < t_meshes.size(); ++a) {
     for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
       // fetch each triangle from our face indices
-      vec[a].vertices.emplace_back(
+      t_meshes[a].vertices.emplace_back(
         t_state.tempMeshes[a].vertices[t_state.tempMeshes[a].faceIndices[i].x],
         t_state.tempMeshes[a].normals[t_state.tempMeshes[a].faceIndices[i].z],
         t_state.tempMeshes[a].texCoords[t_state.tempMeshes[a].faceIndices[i].y]);
       // store the indice of each triangle we create
-      vec[a].indices.emplace_back(i);
+      t_meshes[a].indices.emplace_back(i);
     }
   }
 }
 
-void ObjHelpers::CalcTangentSpace(LoaderState& t_state, const unsigned int t_lodLevel) {
-  for (auto& mesh : GetMeshContainer(t_state, t_lodLevel)) {
+void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
+  for (auto& mesh : t_meshes) {
     for (size_t i = 0; i < mesh.vertices.size(); i += 3) {
       auto         triSpan              = std::span(mesh.vertices.begin() + i, 3);
       const auto&& [tangent, bitangent] = GetTangentCoords(triSpan);
@@ -536,8 +532,8 @@ void ObjHelpers::CalcTangentSpace(LoaderState& t_state, const unsigned int t_lod
   }
 }
 
-void ObjHelpers::JoinIdenticalVertices(LoaderState& t_state, const unsigned int t_lodLevel) {
-  for (auto& mesh : GetMeshContainer(t_state, t_lodLevel)) {
+void ObjHelpers::JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
+  for (auto& mesh : t_meshes) {
     if (mesh.vertices.empty()) {
       continue;
     }

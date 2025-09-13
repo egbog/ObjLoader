@@ -153,12 +153,14 @@ Model ObjLoader::LoadFileInternal(LoaderState&                                  
                                   const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
   // Load LOD obj
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.lodPaths | std::views::values) {
+    std::vector<Mesh>& meshes = ObjHelpers::GetMeshContainer(t_state, lodLevel);
+
     t_state.tempMeshes.clear();
-    ObjHelpers::ParseObj(t_state, t_objBuffer.at(lodLevel), lodLevel);
+    ObjHelpers::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
     ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel));
-    ObjHelpers::Triangulate(t_state, lodLevel);
-    ObjHelpers::CalcTangentSpace(t_state, lodLevel);
-    ObjHelpers::JoinIdenticalVertices(t_state, lodLevel);
+    ObjHelpers::Triangulate(t_state, meshes, lodLevel);
+    ObjHelpers::CalcTangentSpace(meshes);
+    ObjHelpers::JoinIdenticalVertices(meshes);
   }
 
   return Model(t_state.meshes, t_state.lodMeshes, t_state.materials, t_state.path);
