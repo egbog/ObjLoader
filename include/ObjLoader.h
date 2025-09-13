@@ -1,4 +1,5 @@
 #pragma once
+#include "Types/InternalTypes.h"
 #include "Types/SceneTypes.h"
 
 #include <future>
