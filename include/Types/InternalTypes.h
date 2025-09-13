@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+#include <future>
 #include <map>
 #include <string>
 #include <vector>
@@ -10,6 +12,7 @@
 struct Material;
 struct Mesh;
 struct Vertex;
+struct Model;
 
 struct TempMeshes
 {
@@ -37,4 +40,12 @@ struct LoaderState
   std::map<unsigned int, std::vector<Mesh>> lodMeshes;
   std::vector<Material>                     materials;  // final materials
   std::vector<TempMeshes>                   tempMeshes; // interim storage
+};
+
+struct QueuedTask
+{
+  std::packaged_task<Model()>                    task;
+  std::chrono::high_resolution_clock::time_point enqueueTime;
+  unsigned int                                   taskNumber;
+  std::thread::id                                threadId;
 };
