@@ -496,16 +496,17 @@ std::vector<Mesh>& ObjHelpers::GetMeshContainer(LoaderState& t_state, const unsi
   return t_state.lodMeshes[t_lodLevel];
 }
 
-std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const std::span<Vertex>& t_v) {
+std::pair<glm::vec3, glm::vec3>
+ObjHelpers::GetTangentCoords(const Vertex& t_v1, const Vertex& t_v2, const Vertex& t_v3) {
   glm::vec3 tangent1;
   // flat-shaded tangent
-  const glm::vec3 normal = normalize(t_v[0].normal);
+  const glm::vec3 normal = glm::normalize(t_v1.normal);
 
   //clockwise
-  const glm::vec3 edge1    = t_v[1].position - t_v[0].position;
-  const glm::vec3 edge2    = t_v[2].position - t_v[0].position;
-  const glm::vec2 deltaUv1 = t_v[1].texCoords - t_v[0].texCoords;
-  const glm::vec2 deltaUv2 = t_v[2].texCoords - t_v[0].texCoords;
+  const glm::vec3 edge1    = t_v2.position - t_v1.position;
+  const glm::vec3 edge2    = t_v3.position - t_v1.position;
+  const glm::vec2 deltaUv1 = t_v2.texCoords - t_v1.texCoords;
+  const glm::vec2 deltaUv2 = t_v3.texCoords - t_v1.texCoords;
 
   const float f = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv2.x * deltaUv1.y);
   tangent1.x    = f * (deltaUv2.y * edge1.x - deltaUv1.y * edge2.x);
@@ -535,14 +536,35 @@ void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes, 
 
 void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
-    for (size_t i = 0; i < mesh.vertices.size(); i += 3) {
-      auto         triSpan              = std::span(mesh.vertices.begin() + i, 3);
-      const auto&& [tangent, bitangent] = GetTangentCoords(triSpan);
+    for (size_t i = 0; i < mesh.indices.size(); i += 3) {
+      Vertex& v0 = mesh.vertices[mesh.indices[i]];
+      Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
+      Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+
+      const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
+
+      v0.tangent += tangent;
+      v0.biTangent += bitangent;
+      v1.tangent += tangent;
+      v1.biTangent += bitangent;
+      v2.tangent += tangent;
+      v2.biTangent += bitangent;
 
       // store tangent in each of the three vertices associated with the triangle
-      for (size_t j = 0; j < 3; ++j) {
+      /*for (size_t j = 0; j < 3; ++j) {
         mesh.vertices[i + j].tangent   = tangent;
         mesh.vertices[i + j].biTangent = bitangent;
+      }*/
+    }
+
+    // normalize at the end
+    for (auto& v : mesh.vertices) {
+      if (glm::length(v.tangent) > 1e-6f) {
+        v.tangent = glm::normalize(v.tangent);
+      }
+
+      if (glm::length(v.biTangent) > 1e-6f) {
+        v.biTangent = glm::normalize(v.biTangent);
       }
     }
   }
