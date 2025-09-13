@@ -568,10 +568,13 @@ void ObjHelpers::JoinIdenticalVertices(LoaderState& t_state, const unsigned int 
 
       if (curr != prev) {
         ++nextIndex;
-        newVertices.emplace_back(curr);
+        newVertices[nextIndex] = curr; // assign instead of emplace_back
       }
       remap[indexMap[i]] = nextIndex;
     }
+
+    // Resize newVertices to actual number of unique vertices
+    newVertices.resize(nextIndex + 1);
 
     // Remap mesh.indices to the deduplicated set
     mesh.indices.swap(remap);
