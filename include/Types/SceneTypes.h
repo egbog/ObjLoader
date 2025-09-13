@@ -2,6 +2,7 @@
 
 #include "MaterialTypes.h"
 
+#include <array>
 #include <map>
 
 #include <glm/vec2.hpp>
@@ -24,6 +25,20 @@ struct Vertex
     return position == t_other.position && normal == t_other.normal && texCoords == t_other.texCoords && tangent ==
       t_other.tangent && biTangent == t_other.biTangent;
   }
+
+  bool operator!=(const Vertex& t_other) const {
+    return !(*this == t_other);
+}
+
+  [[nodiscard]] auto AsArray() const noexcept {
+    return std::array{position.x, position.y, position.z, normal.x, normal.y, normal.z, texCoords.x, texCoords.y,
+                      tangent.x, tangent.y, tangent.z, biTangent.x, biTangent.y, biTangent.z};
+  }
+
+
+  bool operator<(const Vertex& t_other) const noexcept {
+    return AsArray() < t_other.AsArray();
+  }
 };
 
 struct Mesh
@@ -36,7 +51,7 @@ struct Mesh
                                                                    indices(std::move(t_indices)) {}
 
   ~Mesh()                              = default;
-  Mesh(const Mesh& t_other)                  = default;
+  Mesh(const Mesh& t_other)            = default;
   Mesh(Mesh&& t_other)                 = default;
   Mesh& operator=(const Mesh& t_other) = default;
   Mesh& operator=(Mesh&& t_other)      = default;
@@ -84,22 +99,4 @@ struct Model
   std::map<unsigned int, std::vector<Mesh>> lods;
   std::vector<Material>                     materials;
   std::string                               path;
-};
-
-// Hash function for the Vertex struct to use it in unordered_map
-template <>
-struct std::hash<Vertex>
-{
-  size_t operator()(const Vertex& t_v) const noexcept {
-    const size_t hash1 = std::hash<float>{}(t_v.position.x) ^ std::hash<float>{}(t_v.position.y) ^ std::hash<float>{}(
-      t_v.position.z);
-    const size_t hash2 = std::hash<float>{}(t_v.texCoords.x) ^ std::hash<float>{}(t_v.texCoords.y);
-    const size_t hash3 = std::hash<float>{}(t_v.normal.x) ^ std::hash<float>{}(t_v.normal.y) ^ std::hash<float>{}(
-      t_v.normal.z);
-    const size_t hash4 = std::hash<float>{}(t_v.tangent.x) ^ std::hash<float>{}(t_v.tangent.y) ^ std::hash<float>{}(
-      t_v.tangent.z);
-    const size_t hash5 = std::hash<float>{}(t_v.biTangent.x) ^ std::hash<float>{}(t_v.biTangent.y) ^ std::hash<float>{}(
-      t_v.biTangent.z);
-    return hash1 ^ hash2 ^ hash3 ^ hash4 ^ hash5;
-  }
 };
