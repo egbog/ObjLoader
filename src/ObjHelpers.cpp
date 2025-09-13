@@ -182,8 +182,11 @@ void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
 //  //inFile.close();
 //}
 
-void ObjHelpers::ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, const std::string& t_buffer, const unsigned int t_lodLevel) {
-  int                meshCount = -1;
+void ObjHelpers::ParseObj(LoaderState&       t_state,
+                          std::vector<Mesh>& t_meshes,
+                          const std::string& t_buffer,
+                          const unsigned int t_lodLevel) {
+  int meshCount = -1;
 
   const char* data = t_buffer.data();
   const char* end  = data + t_buffer.size();
@@ -270,7 +273,7 @@ void ObjHelpers::ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, con
 
       t_state.tempMeshes.emplace_back();
       t_meshes.emplace_back();
-      indexOffset = maxIndexSeen;  // carry forward for next mesh
+      indexOffset = maxIndexSeen; // carry forward for next mesh
 
       // Pre-reserve per-mesh vectors based on first-pass counts
       if (int size = static_cast<int>(verticesPerMesh.size()); meshCount < size) {
