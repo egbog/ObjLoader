@@ -66,25 +66,35 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
       t_totalTimer = totalTimer, t_cacheElapsed = cacheTimer.GetTime(), t_mainThreadId = std::this_thread::get_id()]
     {
       const Timer processTime;
-      // since lambda is immutable, and we have to std::move the state, un-const t_state to pass the method for modification
-      auto m = LoadFileInternal(const_cast<LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
-      // per-thread log block
-      std::ostringstream log;
-      log << "Started loading model: " << m.path << '\n';
+      try {
+        // since lambda is immutable, and we have to std::move the state,
+        // un-const t_state to pass the method for modification
+        auto m = LoadFileInternal(const_cast<LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
-      log << "Cached all files in " << t_cacheElapsed << " on thread: " << t_mainThreadId
-        << " (main)" << '\n';
+        // per-thread log block
+        std::ostringstream log;
+        log << "Started loading model: " << m.path << '\n' << "Cached all files in " << t_cacheElapsed << " on thread: "
+          << t_mainThreadId << " (main)\n" << "Processed in " << processTime.GetTime() << " on thread: " <<
+          std::this_thread::get_id() << '\n' << "Successfully loaded in " << t_totalTimer.GetTime() << " on thread: " <<
+          std::this_thread::get_id() << "\n\n";
 
-      log << "Processed in " << processTime.GetTime() << " on thread: " <<
-        std::this_thread::get_id() << '\n';
+        ThreadSafeLog(log.str());
 
-      log << "Successfully loaded in " << t_totalTimer.GetTime() << " on thread: " <<
-        std::this_thread::get_id() << '\n' << '\n';
-
-      ThreadSafeLog(log.str());
-
-      return m;
+        return m;
+      }
+      catch (const std::exception& e) {
+        std::ostringstream log;
+        log << "Error loading model on thread " << std::this_thread::get_id() << ": " << e.what() << '\n';
+        ThreadSafeLog(log.str());
+        throw; // still propagate to future
+      }
+      catch (...) {
+        std::ostringstream log;
+        log << "Unknown error loading model on thread " << std::this_thread::get_id() << '\n';
+        ThreadSafeLog(log.str());
+        throw; // still propagate to future
+      }
     });
 
   std::future<Model> fut = task.get_future();
