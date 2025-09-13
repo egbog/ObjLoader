@@ -554,8 +554,7 @@ void ObjHelpers::JoinIdenticalVertices(LoaderState& t_state, const unsigned int 
         return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
       });
 
-    std::vector<Vertex> newVertices;
-    newVertices.reserve(n);
+    std::vector<Vertex>       newVertices(n);
     std::vector<unsigned int> remap(n);
 
     // Deduplicate vertices while tracking new index mapping
