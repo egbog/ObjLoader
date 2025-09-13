@@ -22,9 +22,9 @@ ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreads(t_maxThreads) {
 
   // pre-spawn a few threads that can be picked up by new tasks before creating more
   // only spawn as many threads as the cpu has, if its a double core, only spawn one
-  //const size_t preSpawnThreads = std::min(m_maxThreads, safeMinimumThreads);
+  const size_t preSpawnThreads = std::min(m_maxThreads, safeMinimumThreads);
 
-  for (size_t i = 0; i < safeMinimumThreads; ++i) {
+  for (size_t i = 0; i < preSpawnThreads; ++i) {
     m_workers.emplace_back([this] { WorkerLoop(); });
   }
 }
