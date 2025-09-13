@@ -10,17 +10,21 @@
 // Global log sink
 inline std::mutex g_logMutex;
 
-ObjLoader::ObjLoader(const size_t t_maxThreads, size_t t_preSpawnThreads) : m_maxThreads(t_maxThreads) {
-  // half of physical cores, at least 1
-  const size_t safeMinimumThreads = std::max<size_t>(1, t_maxThreads / 2); 
-
-  // pre-spawn a few threads that can be picked up by new tasks before creating more
-  if (t_preSpawnThreads == 0) {
-    // only spawn as many threads as the cpu has, if its a double core, only spawn one
-    t_preSpawnThreads = std::min(t_maxThreads, safeMinimumThreads);
+ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreads(t_maxThreads) {
+  // if we are not able to get the amount of max concurrent threads
+  if (m_maxThreads == 0 || m_maxThreadsHw == 0) {
+    // only run on the main thread
+    return;
   }
 
-  for (size_t i = 0; i < t_preSpawnThreads; ++i) {
+  // half of physical cores, at least 1
+  const size_t safeMinimumThreads = std::max<size_t>(1, m_maxThreadsHw / 2);
+
+  // pre-spawn a few threads that can be picked up by new tasks before creating more
+  // only spawn as many threads as the cpu has, if its a double core, only spawn one
+  //const size_t preSpawnThreads = std::min(m_maxThreads, safeMinimumThreads);
+
+  for (size_t i = 0; i < safeMinimumThreads; ++i) {
     m_workers.emplace_back([this] { WorkerLoop(); });
   }
 }
@@ -81,9 +85,10 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
       return m;
     });
 
-  auto fut = task.get_future();
+  std::future<Model> fut = task.get_future();
 
-  {
+  // if concurrency is supported
+  if (m_maxThreads != 0) {
     std::lock_guard lock(m_threadMutex);
 
     m_tasks.emplace(std::move(task));
@@ -93,6 +98,11 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
       m_workers.emplace_back([this] { WorkerLoop(); });
     }
   }
+  // if not just run the task right away on main thread
+  else {
+    task();
+  }
+
   m_cv.notify_one();
 
   return fut;

@@ -11,7 +11,7 @@ struct LoaderState;
 class ObjLoader
 {
 public:
-  explicit ObjLoader(size_t t_maxThreads = std::thread::hardware_concurrency(), size_t t_preSpawnThreads = 0);
+  explicit ObjLoader(size_t t_maxThreads = 0);
   ~ObjLoader();
   ObjLoader& operator=(ObjLoader& t_other)  = delete;
   ObjLoader& operator=(ObjLoader&& t_other) = delete;
@@ -25,9 +25,10 @@ private:
   std::vector<std::jthread>               m_workers;
   std::queue<std::packaged_task<Model()>> m_tasks;
   std::condition_variable                 m_cv;
-  bool                                    m_shutdown    = false;
-  size_t                                  m_idleThreads = 0;
-  size_t m_maxThreads = 0;
+  bool                                    m_shutdown     = false;
+  size_t                                  m_idleThreads  = 0;
+  size_t                                  m_maxThreads   = 0;
+  size_t                                  m_maxThreadsHw = std::thread::hardware_concurrency();
 
 
   void         WorkerLoop();
