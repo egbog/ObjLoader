@@ -71,13 +71,15 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
 
       // per-thread log block
       std::ostringstream log;
-      log << "Cached all files from model: " << m.path << " in " << t_cacheElapsed << " on thread: " << t_mainThreadId
+      log << "Started loading model: " << m.path << '\n';
+
+      log << "Cached all files in " << t_cacheElapsed << " on thread: " << t_mainThreadId
         << " (main)" << '\n';
 
-      log << "Processed model data: " << m.path << " in " << processTime.GetTime() << " on thread: " <<
+      log << "Processed in " << processTime.GetTime() << " on thread: " <<
         std::this_thread::get_id() << '\n';
 
-      log << "Successfully loaded model: " << m.path << " in " << t_totalTimer.GetTime() << " on thread: " <<
+      log << "Successfully loaded in " << t_totalTimer.GetTime() << " on thread: " <<
         std::this_thread::get_id() << '\n' << '\n';
 
       ThreadSafeLog(log.str());
@@ -146,9 +148,7 @@ Model ObjLoader::LoadFileInternal(LoaderState&                                  
     ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel));
     ObjHelpers::Triangulate(t_state, lodLevel);
     ObjHelpers::CalcTangentSpace(t_state, lodLevel);
-    Timer time;
     ObjHelpers::JoinIdenticalVertices(t_state, lodLevel);
-    std::cout << "TIME TO PROCESS: " << time.GetTime() << '\n';
   }
 
   return Model(t_state.meshes, t_state.lodMeshes, t_state.materials, t_state.path);
