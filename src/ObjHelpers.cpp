@@ -6,7 +6,7 @@
 #include <fast_float.h>
 #include <filesystem>
 #include <fstream>
-#include <unordered_map>
+#include <numeric>
 
 #include <glm/geometric.hpp>
 
@@ -538,26 +538,44 @@ void ObjHelpers::CalcTangentSpace(LoaderState& t_state, const unsigned int t_lod
 
 void ObjHelpers::JoinIdenticalVertices(LoaderState& t_state, const unsigned int t_lodLevel) {
   for (auto& mesh : GetMeshContainer(t_state, t_lodLevel)) {
-    std::unordered_map<Vertex, unsigned int> vertexMap; // Map to track unique vertices
-    //const std::vector<Vertex>                oldVertices = mesh.vertices;
-    //mesh.vertices.clear();
-    //mesh.indices.clear();
-
-    std::vector<Vertex> newVertices;
-    newVertices.reserve(mesh.vertices.size());
-    std::vector<unsigned int> newIndices;
-    newIndices.reserve(mesh.indices.size());
-
-    for (const auto& vert : mesh.vertices) {
-      // Check if this vertex already exists in the map
-      const auto [it, inserted] = vertexMap.try_emplace(vert, static_cast<unsigned int>(newVertices.size()));
-      if (inserted) {
-        newVertices.emplace_back(vert);
-      }
-      newIndices.emplace_back(it->second);
+    if (mesh.vertices.empty()) {
+      continue;
     }
 
-    std::swap(mesh.vertices, newVertices);
-    std::swap(mesh.indices, newIndices);
+    const size_t              n = mesh.vertices.size();
+    std::vector<unsigned int> indexMap(n);
+    std::iota(indexMap.begin(), indexMap.end(), 0);
+
+    // Sort indices by vertex value
+    std::ranges::sort(
+      indexMap,
+      [&](const unsigned int t_a, const unsigned int t_b)
+      {
+        return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
+      });
+
+    std::vector<Vertex> newVertices;
+    newVertices.reserve(n);
+    std::vector<unsigned int> remap(n);
+
+    // Deduplicate vertices while tracking new index mapping
+    unsigned int nextIndex = 0;
+    newVertices.emplace_back(mesh.vertices[indexMap[0]]);
+    remap[indexMap[0]] = nextIndex;
+
+    for (size_t i = 1; i < n; ++i) {
+      const Vertex& curr = mesh.vertices[indexMap[i]];
+      const Vertex& prev = mesh.vertices[indexMap[i - 1]];
+
+      if (curr != prev) {
+        ++nextIndex;
+        newVertices.emplace_back(curr);
+      }
+      remap[indexMap[i]] = nextIndex;
+    }
+
+    // Remap mesh.indices to the deduplicated set
+    mesh.indices.swap(remap);
+    mesh.vertices.swap(newVertices);
   }
 }
