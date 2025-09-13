@@ -246,7 +246,9 @@ void ObjHelpers::ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, con
   data = t_buffer.data();
   std::string meshName;
   float       x, y, z;
-  std::vector<glm::uvec3> highestIndex;
+
+  glm::uvec3 indexOffset{0};
+  glm::uvec3 maxIndexSeen{0};
 
   while (data < end) {
     const char* lineStart = data;
@@ -268,7 +270,7 @@ void ObjHelpers::ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, con
 
       t_state.tempMeshes.emplace_back();
       t_meshes.emplace_back();
-      highestIndex.emplace_back();
+      indexOffset = maxIndexSeen;  // carry forward for next mesh
 
       // Pre-reserve per-mesh vectors based on first-pass counts
       if (int size = static_cast<int>(verticesPerMesh.size()); meshCount < size) {
@@ -322,15 +324,13 @@ void ObjHelpers::ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, con
           u.z = std::strtoul(ptr, const_cast<char**>(&ptr), 10);
         }
 
-        // store the highest indices to subtract from the next set of indices
-        highestIndex[meshCount] = glm::max(highestIndex[meshCount], u);
+        // Track max values for this mesh
+        maxIndexSeen = glm::max(maxIndexSeen, u);
 
         --u;
 
-        // rebase against previous mesh’s max
-        if (meshCount > 0) {
-          u -= highestIndex[meshCount - 1];
-        }
+        // Rebase against offset
+        u -= indexOffset;
 
         t_state.tempMeshes[meshCount].faceIndices.emplace_back(u);
 
