@@ -22,8 +22,7 @@ struct Vertex
 
   // == operator override for calculateTriangle
   bool operator==(const Vertex& t_other) const {
-    return position == t_other.position && normal == t_other.normal && texCoords == t_other.texCoords && tangent ==
-      t_other.tangent && biTangent == t_other.biTangent;
+    return position == t_other.position && normal == t_other.normal && texCoords == t_other.texCoords;
   }
 
   bool operator!=(const Vertex& t_other) const {
@@ -31,8 +30,7 @@ struct Vertex
 }
 
   [[nodiscard]] auto AsArray() const noexcept {
-    return std::array{position.x, position.y, position.z, normal.x, normal.y, normal.z, texCoords.x, texCoords.y,
-                      tangent.x, tangent.y, tangent.z, biTangent.x, biTangent.y, biTangent.z};
+    return std::array{position.x, position.y, position.z, normal.x, normal.y, normal.z, texCoords.x, texCoords.y};
   }
 
 
