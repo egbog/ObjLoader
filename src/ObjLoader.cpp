@@ -5,8 +5,6 @@
 
 #include <Time/Timer.h>
 
-#include <Types/InternalTypes.h>
-
 // Global log sink
 inline std::mutex g_logMutex;
 
@@ -39,7 +37,6 @@ ObjLoader::~ObjLoader() {
 }
 
 std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
-  const Timer totalTimer;
   const Timer cacheTimer;
   LoaderState state;
 
@@ -60,10 +57,13 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
     }
   }
 
+  // assign task number before creating task and pass by value
+  unsigned int taskNumber = ++m_totalTasks; // atomic increment
+
   //construct our threaded task
   std::packaged_task task(
     [this, t_state = std::move(state), t_objBuffers = std::move(objBuffers), t_mtlBuffers = std::move(mtlBuffers),
-      t_totalTimer = totalTimer, t_cacheElapsed = cacheTimer.GetTime(), t_mainThreadId = std::this_thread::get_id()]
+      t_cacheElapsed = cacheTimer.GetTime(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber = taskNumber]
     {
       const Timer processTime;
 
@@ -74,10 +74,10 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
 
         // per-thread log block
         std::ostringstream log;
-        log << "Started loading model: " << m.path << '\n' << "Cached all files in " << t_cacheElapsed << " on thread: "
-          << t_mainThreadId << " (main)\n" << "Processed in " << processTime.GetTime() << " on thread: " <<
-          std::this_thread::get_id() << '\n' << "Successfully loaded in " << t_totalTimer.GetTime() << " on thread: " <<
-          std::this_thread::get_id() << "\n\n";
+        log << "\nStarted loading task #" << t_taskNumber << " - model: " << m.path << " on thread: " << std::this_thread::get_id() << '\n';
+        //log << "Cached all files in " << t_cacheElapsed << " on thread: " << t_mainThreadId << " (main)\n";
+        //log << "Processed in " << processTime.GetTime() << " on thread: " << std::this_thread::get_id() << '\n';
+        log << "Successfully loaded task #" << t_taskNumber << " in " << processTime.GetTime() + t_cacheElapsed << "\n";
 
         ThreadSafeLog(log.str());
 
@@ -103,9 +103,10 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
   if (m_maxThreads != 0) {
     std::lock_guard lock(m_threadMutex);
 
-    m_tasks.emplace(std::move(task));
+    // the time that it was created and the task number it was assigned
+    m_tasks.emplace(std::move(task), std::chrono::high_resolution_clock::now(), m_totalTasks);
 
-    // If all threads are busy and we haven't reached maxThreads, spawn a new one
+    // If all threads are busy, and we haven't reached maxThreads, spawn a new one
     if (m_idleThreads == 0 && m_workers.size() < m_maxThreads) {
       m_workers.emplace_back([this] { WorkerLoop(); });
     }
@@ -123,7 +124,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
 void ObjLoader::WorkerLoop() {
   while (true) {
     // we made this std::optional to avoid the overhead of default constructing a packaged_task
-    std::optional<std::packaged_task<Model()>> task;
+    std::optional<QueuedTask> task;
 
     {
       std::unique_lock lock(m_threadMutex);
@@ -144,7 +145,18 @@ void ObjLoader::WorkerLoop() {
       m_tasks.pop();
     }
 
-    (*task)(); // run job
+    task->threadId = std::this_thread::get_id();
+
+    // Measure how long this job waited in the queue
+    auto now      = std::chrono::high_resolution_clock::now();
+    auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - task->enqueueTime);
+
+    std::ostringstream ss;
+    ss << "Task #" << task->taskNumber << " waited " << waitTime << " in the queue before starting on thread: " << task
+      ->threadId << '\n';
+    ThreadSafeLog(ss.str());
+
+    task->task(); // run job
   }
 }
 
