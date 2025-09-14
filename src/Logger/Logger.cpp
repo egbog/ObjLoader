@@ -28,10 +28,10 @@ void Logger::LoggerWorkerThread() {
   }
 }
 
-void Logger::ThreadSafeLogMessage(const std::string& t_entry) {
+void Logger::ThreadSafeLogMessage(std::string t_entry) {
   {
     std::lock_guard lock(m_waitLogMutex);
-    m_logQueue.emplace(t_entry);
+    m_logQueue.emplace(std::move(t_entry));
   }
   m_cv.notify_one();
 }

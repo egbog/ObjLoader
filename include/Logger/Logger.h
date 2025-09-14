@@ -15,7 +15,7 @@ public:
   Logger(Logger&& t_other)            = delete;
 
   void LoggerWorkerThread();
-  void ThreadSafeLogMessage(const std::string& t_entry);
+  void ThreadSafeLogMessage(std::string t_entry);
 
 private:
   void                    Shutdown();
