@@ -5,6 +5,12 @@
 
 #include <Time/Timer.h>
 
+/*!
+ * @brief Initializes the instance and dispatches an appropriate number of threads pre-emptively, ready to pick up tasks
+ * @param t_maxThreads User desired maximum amount of threads to dispatch across the whole instance.
+ * \n A small portion of this will be pre-dispatched
+ * \n Note if files are small enough, the amount of dispatched threads may not actually reach this limit
+ */
 ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads) {
   m_logger.DispatchWorkerThread();
 
@@ -35,6 +41,11 @@ ObjLoader::~ObjLoader() {
   // No need to manually join m_workers, jthreads will join automatically
 }
 
+/*!
+ * @brief Loads an obj + mtl file asynchronously
+ * @param t_path Relative path to obj file, including file extension
+ * @return std::future<Model> of the created task that loads the file
+ */
 std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
   const Timer cacheTimer;
   LoaderState state;
@@ -122,6 +133,9 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
   return fut;
 }
 
+/*!
+ * @brief A worker intended to be dispatched on a thread that will automatically pick up tasks that are inserted into the queue and will wait if the queue is empty.
+ */
 void ObjLoader::WorkerLoop() {
   while (true) {
     // we made this std::optional to avoid the overhead of default constructing a packaged_task
@@ -181,6 +195,14 @@ void ObjLoader::WorkerLoop() {
   }
 }
 
+
+/*!
+ * @brief Parses and processes every file associated with the specified t_path given to LoadFile()
+ * @param t_state The instance-thread specific state data that houses temporary processing containers
+ * @param t_objBuffer Map of every detected obj loaded into memory as a std::string
+ * @param t_mtlBuffer Map of every detected mtl loaded into memory as a std::string
+ * @return Rvalue Model constructed with the processed data
+ */
 Model ObjLoader::LoadFileInternal(LoaderState&                                         t_state,
                                   const std::unordered_map<unsigned int, std::string>& t_objBuffer,
                                   const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {

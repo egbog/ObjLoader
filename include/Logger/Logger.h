@@ -21,10 +21,10 @@ private:
   void WorkerThread();
   void Shutdown();
 
-  std::jthread            m_thread;
-  std::queue<LogEntry>    m_logQueue;
-  std::queue<LogEntry>    m_resultQueue;
-  std::mutex              m_waitLogMutex;
-  std::condition_variable m_cv;
+
+  std::jthread            m_thread;       // Worker thread
+  std::queue<LogEntry>    m_logQueue;     // The message queue
+  std::mutex              m_waitLogMutex; // Mutex for inserting and popping into the queue
+  std::condition_variable m_cv;           // Cv to wait thread
   bool                    m_shutdown = false;
 };

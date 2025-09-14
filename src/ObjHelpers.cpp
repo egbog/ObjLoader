@@ -10,6 +10,11 @@
 
 #include <glm/geometric.hpp>
 
+/*!
+ * @brief Reads specified file path to a std::string buffer
+ * @param t_path Path to file including file extension
+ * @return String buffer
+ */
 std::string ObjHelpers::ReadFileToBuffer(const std::string& t_path) {
   std::ifstream in(t_path, std::ios::binary | std::ios::ate);
   if (!in.is_open()) {
@@ -24,7 +29,11 @@ std::string ObjHelpers::ReadFileToBuffer(const std::string& t_path) {
   return buffer;
 }
 
-// finds all lod files and corresponding mtl files and stores them
+
+/*!
+ * @brief Finds all lod files if any and their corresponding mtl files and stores them
+ * @param t_state Internal state data to store the file paths in
+ */
 void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
   // whole file path
   const std::filesystem::path basePath = t_state.path;
@@ -79,109 +88,13 @@ void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
   }
 }
 
-//void ObjHelpers::ParseObj(LoaderState& t_state, const std::string& t_buffer, unsigned int t_lodLevel) {
-//  std::istringstream inFile(t_buffer);
-//
-//  if (!inFile.good()) {
-//    throw std::runtime_error("Failed to open OBJ file");
-//  }
-//
-//  //-------------------------------------------------------------------------------------------------------------------
-//  // use file size as estimate for vector reserves
-//  //std::filesystem::path p(t_path);
-//  //auto                  fileSize = file_size(p); // size in bytes
-//
-//  // average each line is ~34 bytes (plus lines like #comments and s 1, mtllib, o etc.)
-//  // filesize / 34 = ~linecount
-//  //const auto linecount = fileSize / 34;
-//  // file consists of pos, tex, norm and faces so divide linecount by 4
-//  //m_vertices.reserve(linecount / 4); // each line is ~30 bytes
-//  //m_texCoords.reserve(linecount / 4); // ~20 bytes
-//  //m_normals.reserve(linecount / 4);   // ~25 bytes
-//  //-------------------------------------------------------------------------------------------------------------------
-//
-//  std::string        line;
-//  std::string        meshName;
-//  std::istringstream ss;
-//
-//  std::vector<Mesh>& meshes = GetMeshContainer(t_state, t_lodLevel);
-//
-//  int meshCount = -1;
-//
-//  // temp vectors
-//  float x, y, z;
-//
-//  while (std::getline(inFile, line)) {
-//    if (line.empty() || line[0] == '#') // Skip empty lines and comments
-//    {
-//      continue;
-//    }
-//
-//    ss.clear();
-//    ss.str(line);
-//
-//    std::string prefix;
-//    ss >> prefix;
-//
-//    if (prefix == "mtllib") {
-//      ss >> t_state.mtlFileName;
-//    }
-//    // name of model
-//    else if (prefix == "o") {
-//      ss >> meshName;
-//      meshCount++;
-//
-//      // temp storage
-//      t_state.tempMeshes.emplace_back();
-//      //t_state.tempMeshes[meshCount].vertices.reserve(linecount / 4);
-//      //t_state.tempMeshes[meshCount].texCoords.reserve(linecount / 4);
-//      //t_state.tempMeshes[meshCount].faceIndices.reserve(linecount);
-//
-//      meshes.emplace_back();
-//      //meshes[meshCount].vertices.reserve(linecount);
-//      //meshes[meshCount].indices.reserve(linecount);
-//      meshes[meshCount].name       = meshName;
-//      meshes[meshCount].meshNumber = meshCount;
-//      meshes[meshCount].lodLevel   = t_lodLevel;
-//    }
-//    else if (prefix == "v") {
-//      ss >> x >> y >> z;
-//
-//      t_state.tempMeshes[meshCount].vertices.emplace_back(x, y, z);
-//    }
-//    else if (prefix == "vt") {
-//      ss >> x >> y;
-//
-//      // flip uv y axis
-//      //if(tvec2.y < 0) // _________________________________________________________________________________________________________________
-//      //tvec2.y = 1.0f - tvec2.y;
-//
-//      t_state.tempMeshes[meshCount].texCoords.emplace_back(x, y);
-//    }
-//    else if (prefix == "vn") {
-//      ss >> x >> y >> z;
-//      //tvec3 = 1.0f - tvec3; //invert normals - not necessary
-//      t_state.tempMeshes[meshCount].normals.emplace_back(x, y, z);
-//    }
-//    else if (prefix == "usemtl") {
-//      ss >> meshes[meshCount].material;
-//    }
-//    else if (prefix == "f") {
-//      // each face is an index of a tri. we can use these tris to calc tangent
-//      for (int i = 0; i < 3; i++) {
-//        char       c;
-//        glm::uvec3 u;
-//        ss >> u.x >> c >> u.y >> c >> u.z;
-//
-//        --u; // indices start at 1 in obj files. opengl starts at 0 so we subtract 1
-//
-//        t_state.tempMeshes[meshCount].faceIndices.emplace_back(u);
-//      }
-//    }
-//  }
-//  //inFile.close();
-//}
-
+/*!
+ * @brief Pointer walks through the obj file and stores vertex data in LoaderState
+ * @param t_state Internal state data to store vertex data
+ * @param t_meshes List of meshes created by parsing
+ * @param t_buffer String buffer of current file
+ * @param t_lodLevel Specified lod level, if any
+ */
 void ObjHelpers::ParseObj(LoaderState&       t_state,
                           std::vector<Mesh>& t_meshes,
                           const std::string& t_buffer,
@@ -345,56 +258,11 @@ void ObjHelpers::ParseObj(LoaderState&       t_state,
   }
 }
 
-//void ObjHelpers::ParseMtl(LoaderState& t_state, const std::string& t_buffer) {
-//  // load mtl
-//  std::istringstream inFileMtl(t_buffer);
-//
-//  if (!inFileMtl.good()) {
-//    throw std::runtime_error("Failed to open MTL file");
-//  }
-//
-//  int                mtlCount = -1;
-//  std::string        line;
-//  std::istringstream ss;
-//  std::string        prefix;
-//
-//  while (std::getline(inFileMtl, line)) {
-//    ss.clear();
-//    ss.str(line);
-//    prefix = "";
-//    ss >> prefix;
-//
-//    if (prefix == "newmtl") {
-//      std::string mtlname;
-//      ss >> mtlname;
-//      // create new material
-//      t_state.materials.emplace_back(mtlname);
-//      mtlCount = static_cast<int>(t_state.materials.size() - 1);
-//    }
-//    else if (prefix == "map_Kd" && mtlCount >= 0) // diffuse
-//    {
-//      std::string t;
-//      ss >> t;
-//      t_state.materials[mtlCount].diffuseName.emplace_back(t);
-//    }
-//    else if ((prefix == "map_Ks" || prefix == "map_Ns") && mtlCount >= 0)
-//    // map_Ns specular strength, map_Ks specular color
-//    {
-//      std::string t;
-//      ss >> t;
-//      t_state.materials[mtlCount].specularName.emplace_back(t);
-//    }
-//    else if (prefix == "map_Bump" && mtlCount >= 0) // normal
-//    {
-//      std::string t;
-//      ss >> t;
-//      t_state.materials[mtlCount].normalName.emplace_back(t);
-//    }
-//  }
-//
-//  //inFileMtl.close();
-//}
-
+/*!
+ * @brief Pointer walks through the mtl file and stores texture info in LoaderState
+ * @param t_state Internal state data to store texture info
+ * @param t_buffer String buffer of current file
+ */
 void ObjHelpers::ParseMtl(LoaderState& t_state, const std::string& t_buffer) {
   // --- First pass: estimate number of materials ---
   size_t      materialCount = 0;
@@ -488,6 +356,12 @@ void ObjHelpers::ParseMtl(LoaderState& t_state, const std::string& t_buffer) {
   }
 }
 
+/*!
+ * @brief Returns the proper mesh container given a lod level or not
+ * @param t_state Internal state data to grab mesh container from
+ * @param t_lodLevel Specified lod level, if any
+ * @return Reference to the appropriate container
+ */
 std::vector<Mesh>& ObjHelpers::GetMeshContainer(LoaderState& t_state, const unsigned int t_lodLevel) {
   if (t_lodLevel == 0) {
     return t_state.meshes;
@@ -496,8 +370,16 @@ std::vector<Mesh>& ObjHelpers::GetMeshContainer(LoaderState& t_state, const unsi
   return t_state.lodMeshes[t_lodLevel];
 }
 
-std::pair<glm::vec3, glm::vec3>
-ObjHelpers::GetTangentCoords(const Vertex& t_v1, const Vertex& t_v2, const Vertex& t_v3) {
+/*!
+ * @brief TODO
+ * @param t_v1 First point of vertex data
+ * @param t_v2 Second point of vertex data
+ * @param t_v3 Third point of vertex data
+ * @return Pair of calculated tangent and bitangent
+ */
+std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const Vertex& t_v1,
+                                                             const Vertex& t_v2,
+                                                             const Vertex& t_v3) {
   glm::vec3 tangent1;
   // flat-shaded tangent
   const glm::vec3 normal = glm::normalize(t_v1.normal);
@@ -520,7 +402,12 @@ ObjHelpers::GetTangentCoords(const Vertex& t_v1, const Vertex& t_v2, const Verte
   return {tangent1, bitangent1};
 }
 
-void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes, const unsigned int t_lodLevel) {
+/*!
+ * @brief TODO
+ * @param t_state Internal state data used to grab vertex data from temporary containers
+ * @param t_meshes List of meshes to triangulate
+ */
+void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes) {
   for (unsigned int a = 0; a < t_meshes.size(); ++a) {
     for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
       // fetch each triangle from our face indices
@@ -534,6 +421,10 @@ void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes, 
   }
 }
 
+/*!
+ * @brief 
+ * @param t_meshes List of meshes to calculate tangents from
+ */
 void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
     for (size_t i = 0; i < mesh.indices.size(); i += 3) {
@@ -549,12 +440,6 @@ void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
       v1.biTangent += bitangent;
       v2.tangent += tangent;
       v2.biTangent += bitangent;
-
-      // store tangent in each of the three vertices associated with the triangle
-      /*for (size_t j = 0; j < 3; ++j) {
-        mesh.vertices[i + j].tangent   = tangent;
-        mesh.vertices[i + j].biTangent = bitangent;
-      }*/
     }
 
     // normalize at the end
@@ -570,6 +455,10 @@ void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
   }
 }
 
+/*!
+ * @brief Deduplicates vertices with identical pos, uv and normal data
+ * @param t_meshes List of meshes to deduplicate
+ */
 void ObjHelpers::JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
     if (mesh.vertices.empty()) {
