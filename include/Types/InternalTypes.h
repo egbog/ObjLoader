@@ -49,3 +49,8 @@ struct QueuedTask
   unsigned int                                   taskNumber;
   std::thread::id                                threadId;
 };
+
+struct LogEntry
+{
+  std::ostringstream message;
+};
