@@ -66,7 +66,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
     [this, t_state = std::move(state), t_objBuffers = std::move(objBuffers), t_mtlBuffers = std::move(mtlBuffers),
       t_cacheElapsed = cacheTimer.GetTime(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber = taskNumber]
     {
-      const Timer processTime;
+      const Timer        processTime;
       std::ostringstream log;
 
       try {

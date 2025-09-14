@@ -34,7 +34,7 @@ private:
   size_t                    m_maxThreadsHw      = std::thread::hardware_concurrency();
   size_t                    m_maxPreSpawnThread = 0;
   std::atomic<unsigned int> m_totalTasks        = 0;
-  Logger                    m_logger = Logger();
+  Logger                    m_logger            = Logger();
 
   void         WorkerLoop();
   static Model LoadFileInternal(LoaderState&                                         t_state,
