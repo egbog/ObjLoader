@@ -19,6 +19,7 @@ public:
 
 private:
   void                    Shutdown();
+
   std::queue<LogEntry>    m_logQueue;
   std::mutex              m_waitLogMutex;
   std::condition_variable m_cv;

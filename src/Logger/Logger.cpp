@@ -18,14 +18,16 @@ void Logger::LoggerWorkerThread() {
       break;
     }
 
-    while (!m_logQueue.empty()) {
-      auto [message] = std::move(m_logQueue.front());
-      m_logQueue.pop();
+    std::string message;
 
-      lock.unlock();
-      std::cout << message;
-      lock.lock();
+    // Scope for the lock just to pop from the queue
+    {
+      message = std::move(m_logQueue.front()).message;
+      m_logQueue.pop();
     }
+
+    lock.unlock(); // unlock before expensive I/O
+    std::cout << message;
   }
 }
 
