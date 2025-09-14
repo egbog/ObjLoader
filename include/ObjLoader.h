@@ -23,6 +23,8 @@ public:
 
   std::future<Model> LoadFile(const std::string& t_path);
 
+  unsigned int WorkerCount() const { return m_workers.size(); }
+
 private:
   std::mutex                m_threadMutex;
   std::vector<std::jthread> m_workers;

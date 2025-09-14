@@ -6,6 +6,8 @@
 #include <Time/Timer.h>
 
 ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads) {
+  m_logger.DispatchWorkerThread();
+
   // if we are not able to get the amount of max concurrent threads
   if (m_maxThreadsUser == 0 || m_maxThreadsHw == 0) {
     // only run on the main thread
@@ -22,10 +24,6 @@ ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads)
   for (size_t i = 0; i < m_maxPreSpawnThread; ++i) {
     m_workers.emplace_back([this] { WorkerLoop(); });
   }
-
-  // Dispatch logger worker
-  auto thread = std::jthread([this] { m_logger.LoggerWorkerThread(); });
-  thread.detach();
 }
 
 ObjLoader::~ObjLoader() {
