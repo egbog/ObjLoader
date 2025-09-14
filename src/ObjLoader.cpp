@@ -163,7 +163,6 @@ void ObjLoader::WorkerLoop() {
         task->taskNumber,
         waitTime,
         task->ThreadIdString());
-      m_logger.ThreadSafeLogMessage(log);
     }
     else if (task->taskNumber > m_maxPreSpawnThread) {
       log = std::format(
@@ -171,10 +170,12 @@ void ObjLoader::WorkerLoop() {
         task->taskNumber,
         waitTime,
         task->ThreadIdString());
-      m_logger.ThreadSafeLogMessage(log);
     }
     else {
       log = std::format("Task #{} assigned to already running thread: {}\n", task->taskNumber, task->ThreadIdString());
+    }
+
+    if (!log.empty()) {
       m_logger.ThreadSafeLogMessage(log);
     }
 
@@ -185,7 +186,7 @@ void ObjLoader::WorkerLoop() {
 Model ObjLoader::LoadFileInternal(LoaderState&                                         t_state,
                                   const std::unordered_map<unsigned int, std::string>& t_objBuffer,
                                   const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
-  // Load LOD obj
+  // Load obj
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.lodPaths | std::views::values) {
     std::vector<Mesh>& meshes = ObjHelpers::GetMeshContainer(t_state, lodLevel);
 
