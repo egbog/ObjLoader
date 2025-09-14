@@ -1,5 +1,4 @@
 #pragma once
-#include <iosfwd>
 #include <mutex>
 #include <queue>
 
@@ -16,7 +15,7 @@ public:
   Logger(Logger&& t_other)            = delete;
 
   void LoggerWorkerThread();
-  void ThreadSafeLogMessage(std::ostringstream t_entry);
+  void ThreadSafeLogMessage(const std::string& t_entry);
 
 private:
   void                    Shutdown();

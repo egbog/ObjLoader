@@ -23,15 +23,15 @@ void Logger::LoggerWorkerThread() {
       m_logQueue.pop();
 
       lock.unlock();
-      std::cout << message.str();
+      std::cout << message;
       lock.lock();
     }
   }
 }
 
-void Logger::ThreadSafeLogMessage(std::ostringstream t_entry) {
+void Logger::ThreadSafeLogMessage(const std::string& t_entry) {
   std::lock_guard lock(m_waitLogMutex);
-  m_logQueue.emplace(std::move(t_entry));
+  m_logQueue.emplace(t_entry);
   m_cv.notify_one();
 }
 

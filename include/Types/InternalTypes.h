@@ -44,6 +44,12 @@ struct LoaderState
 
 struct QueuedTask
 {
+  std::string ThreadIdString() const {
+    std::ostringstream s;
+    s << threadId;
+    return s.str();
+  }
+
   std::packaged_task<Model()>                    task;
   std::chrono::high_resolution_clock::time_point enqueueTime;
   unsigned int                                   taskNumber;
@@ -52,5 +58,5 @@ struct QueuedTask
 
 struct LogEntry
 {
-  std::ostringstream message;
+  std::string message;
 };
