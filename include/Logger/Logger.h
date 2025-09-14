@@ -14,13 +14,16 @@ public:
   Logger(Logger& t_other)             = delete;
   Logger(Logger&& t_other)            = delete;
 
-  void LoggerWorkerThread();
+  void DispatchWorkerThread();
   void ThreadSafeLogMessage(std::string t_entry);
 
 private:
-  void                    Shutdown();
+  void WorkerThread();
+  void Shutdown();
 
+  std::jthread            m_thread;
   std::queue<LogEntry>    m_logQueue;
+  std::queue<LogEntry>    m_resultQueue;
   std::mutex              m_waitLogMutex;
   std::condition_variable m_cv;
   bool                    m_shutdown = false;

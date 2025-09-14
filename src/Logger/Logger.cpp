@@ -6,7 +6,20 @@ Logger::~Logger() {
   Shutdown();
 }
 
-void Logger::LoggerWorkerThread() {
+void Logger::DispatchWorkerThread() {
+  // Dispatch logger worker
+  m_thread = std::jthread([this] { WorkerThread(); });
+}
+
+void Logger::ThreadSafeLogMessage(std::string t_entry) {
+  {
+    std::lock_guard lock(m_waitLogMutex);
+    m_logQueue.emplace(std::move(t_entry));
+  }
+  m_cv.notify_one();
+}
+
+void Logger::WorkerThread() {
   std::cout << "Logger worker thread dispatched to thread: " << std::this_thread::get_id() << '\n';
   std::string message;
   while (true) {
@@ -28,14 +41,13 @@ void Logger::LoggerWorkerThread() {
   }
 }
 
-void Logger::ThreadSafeLogMessage(std::string t_entry) {
-  {
-    std::lock_guard lock(m_waitLogMutex);
-    m_logQueue.emplace(std::move(t_entry));
-  }
-  m_cv.notify_one();
-}
-
 void Logger::Shutdown() {
-  m_shutdown = true;
+  {
+    std::lock_guard<std::mutex> lock(m_waitLogMutex);
+    m_shutdown = true;
+  }
+  m_cv.notify_all(); // wake worker
+  if (m_thread.joinable()) {
+        m_thread.join(); // wait until worker finishes flushing
+    }
 }
