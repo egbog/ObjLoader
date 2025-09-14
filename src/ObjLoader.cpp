@@ -81,20 +81,20 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
         //log << "Processed in " << processTime.GetTime() << " on thread: " << std::this_thread::get_id() << '\n';
         log << "Successfully loaded task #" << t_taskNumber << " in " << processTime.GetTime() + t_cacheElapsed << "\n";
 
-        m_logger.ThreadSafeLogMessage(log);
+        m_logger.ThreadSafeLogMessage(std::move(log));
 
         return m;
       }
       catch (const std::exception& e) {
         std::ostringstream log;
         log << "Error loading model on thread " << std::this_thread::get_id() << ": " << e.what() << '\n';
-        m_logger.ThreadSafeLogMessage(log);
+        m_logger.ThreadSafeLogMessage(std::move(log));
         throw; // still propagate to future
       }
       catch (...) {
         std::ostringstream log;
         log << "Unknown error loading model on thread " << std::this_thread::get_id() << '\n';
-        m_logger.ThreadSafeLogMessage(log);
+        m_logger.ThreadSafeLogMessage(std::move(log));
         throw; // still propagate to future
       }
     });
@@ -158,18 +158,18 @@ void ObjLoader::WorkerLoop() {
       std::ostringstream log;
       log << "Task #" << task->taskNumber << " waited " << waitTime << " before starting on new thread: " << task->
         threadId << '\n';
-      m_logger.ThreadSafeLogMessage(log);
+      m_logger.ThreadSafeLogMessage(std::move(log));
     }
     else if (task->taskNumber > m_maxPreSpawnThread) {
       std::ostringstream log;
       log << "Task #" << task->taskNumber << " waited " << waitTime << " in queue " << "before starting on thread: " <<
         task->threadId << '\n';
-      m_logger.ThreadSafeLogMessage(log);
+      m_logger.ThreadSafeLogMessage(std::move(log));
     }
     else {
       std::ostringstream log;
       log << "Task #" << task->taskNumber << " assigned to already running thread: " << task->threadId << '\n';
-      m_logger.ThreadSafeLogMessage(log);
+      m_logger.ThreadSafeLogMessage(std::move(log));
     }
 
     task->task(); // run job
