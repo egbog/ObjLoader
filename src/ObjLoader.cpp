@@ -67,6 +67,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
       t_cacheElapsed = cacheTimer.GetTime(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber = taskNumber]
     {
       const Timer processTime;
+      std::ostringstream log;
 
       try {
         // since lambda is immutable, and we have to std::move the state,
@@ -74,7 +75,6 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
         auto m = LoadFileInternal(const_cast<LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
         // per-thread log block
-        std::ostringstream log;
         log << "\nStarted loading task #" << t_taskNumber << " - " << m.path << " on thread: " <<
           std::this_thread::get_id() << '\n';
         //log << "Cached all files in " << t_cacheElapsed << " on thread: " << t_mainThreadId << " (main)\n";
@@ -86,13 +86,11 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
         return m;
       }
       catch (const std::exception& e) {
-        std::ostringstream log;
         log << "Error loading model on thread " << std::this_thread::get_id() << ": " << e.what() << '\n';
         m_logger.ThreadSafeLogMessage(std::move(log));
         throw; // still propagate to future
       }
       catch (...) {
-        std::ostringstream log;
         log << "Unknown error loading model on thread " << std::this_thread::get_id() << '\n';
         m_logger.ThreadSafeLogMessage(std::move(log));
         throw; // still propagate to future
@@ -154,20 +152,19 @@ void ObjLoader::WorkerLoop() {
     // assign threadId once the task gets picked up
     task->threadId = std::this_thread::get_id();
 
+    std::ostringstream log;
+
     if (task->taskNumber > m_maxPreSpawnThread && task->taskNumber <= m_maxThreadsUser) {
-      std::ostringstream log;
       log << "Task #" << task->taskNumber << " waited " << waitTime << " before starting on new thread: " << task->
         threadId << '\n';
       m_logger.ThreadSafeLogMessage(std::move(log));
     }
     else if (task->taskNumber > m_maxPreSpawnThread) {
-      std::ostringstream log;
       log << "Task #" << task->taskNumber << " waited " << waitTime << " in queue " << "before starting on thread: " <<
         task->threadId << '\n';
       m_logger.ThreadSafeLogMessage(std::move(log));
     }
     else {
-      std::ostringstream log;
       log << "Task #" << task->taskNumber << " assigned to already running thread: " << task->threadId << '\n';
       m_logger.ThreadSafeLogMessage(std::move(log));
     }
