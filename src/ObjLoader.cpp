@@ -77,7 +77,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
         auto m = LoadFileInternal(const_cast<LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
         log = std::format(
-          "\nStarted loading task #{} - {} on thread: {}\nSuccessfully loaded task #{} in {}\n",
+          "\nStarted loading task #{} - {} on thread: {}\nSuccessfully loaded task #{} in {:L}\n",
           t_taskNumber,
           m.path,
           id.str(),
@@ -168,7 +168,7 @@ void ObjLoader::WorkerLoop() {
     if (task->taskNumber > m_maxPreSpawnThread && task->taskNumber <= m_maxThreadsUser) {
       //log << "Task #" << task->taskNumber << " waited " << waitTime << " before starting on new thread: " << task-> threadId << '\n';
       log = std::format(
-        "Task #{} waited {} before starting on new thread: {}\n",
+        "Task #{} waited {:L} before starting on new thread: {}\n",
         task->taskNumber,
         waitTime,
         task->ThreadIdString());
@@ -177,7 +177,7 @@ void ObjLoader::WorkerLoop() {
     else if (task->taskNumber > m_maxPreSpawnThread) {
       //log << "Task #" << task->taskNumber << " waited " << waitTime << " in queue " << "before starting on thread: " << task->threadId << '\n';
       log = std::format(
-        "Task #{} waited {} in queue before starting on thread: {}\n",
+        "Task #{} waited {:L} in queue before starting on thread: {}\n",
         task->taskNumber,
         waitTime,
         task->ThreadIdString());
