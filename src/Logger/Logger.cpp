@@ -1,6 +1,6 @@
-#include <iostream>
+#include "Logger/Logger.h"
 
-#include <Logger/Logger.h>
+#include <iostream>
 
 Logger::~Logger() {
   Shutdown();

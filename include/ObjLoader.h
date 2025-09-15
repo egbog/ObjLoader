@@ -4,7 +4,6 @@
 #include "Time/Timer.h"
 
 #include <future>
-#include <queue>
 #include <string>
 
 namespace ol
