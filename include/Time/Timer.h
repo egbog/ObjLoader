@@ -1,21 +1,24 @@
 #pragma once
 #include <chrono>
-#include <mutex>
 
-class Timer
-{
+class Timer {
 public:
-  Timer() {
-    m_start = std::chrono::high_resolution_clock::now();
-  }
+    using Clock = std::chrono::high_resolution_clock;
+    using TimePoint = Clock::time_point;
 
-  std::chrono::duration<double, std::milli> GetTime() const {
-    elapsed = std::chrono::high_resolution_clock::now() - m_start;
-    return elapsed;
-  }
+    Timer() { Reset(); }
 
-  mutable std::chrono::duration<double, std::milli> elapsed;
+    // Reset the timer to "now"
+    void Reset() {
+        m_start = Clock::now();
+    }
+
+    // Generic elapsed time in any chrono duration type
+    template <typename DurationT = std::milli>
+    std::chrono::duration<double, DurationT> Elapsed() const {
+        return std::chrono::duration<double, DurationT>(Clock::now() - m_start);
+    }
 
 private:
-  std::chrono::time_point<std::chrono::steady_clock> m_start;
+    TimePoint m_start;
 };
