@@ -152,7 +152,7 @@ void ObjLoader::WorkerLoop() {
       m_idleThreads--; // thread is waking up
 
       if (m_shutdown && m_tasks.empty()) {
-        return;
+        break;
       }
 
       // move the next element in the queue to a temp var to run
