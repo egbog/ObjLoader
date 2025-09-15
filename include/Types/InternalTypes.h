@@ -41,6 +41,7 @@ struct LoaderState
 
 struct QueuedTask
 {
+  QueuedTask() = delete;
   QueuedTask(std::packaged_task<Model()> t_task, const unsigned int t_taskNumber) : task(std::move(t_task)), timer(Timer()), taskNumber(t_taskNumber) {}
 
   [[nodiscard]] std::string ThreadIdString() const {
