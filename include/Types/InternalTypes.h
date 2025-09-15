@@ -1,18 +1,15 @@
 #pragma once
 
+#include "SceneTypes.h"
+
+#include "Time/Timer.h"
+
 #include <chrono>
 #include <future>
-#include <map>
 #include <string>
 #include <vector>
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-
 struct Material;
-struct Mesh;
-struct Vertex;
-struct Model;
 
 struct TempMeshes
 {
@@ -44,14 +41,16 @@ struct LoaderState
 
 struct QueuedTask
 {
-  std::string ThreadIdString() const {
+  QueuedTask(std::packaged_task<Model()> t_task, const unsigned int t_taskNumber) : task(std::move(t_task)), timer(Timer()), taskNumber(t_taskNumber) {}
+
+  [[nodiscard]] std::string ThreadIdString() const {
     std::ostringstream s;
     s << threadId;
     return s.str();
   }
 
   std::packaged_task<Model()>                    task;
-  std::chrono::high_resolution_clock::time_point enqueueTime;
+  Timer                                          timer;
   unsigned int                                   taskNumber;
   std::thread::id                                threadId;
 };
