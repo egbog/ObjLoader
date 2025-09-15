@@ -51,7 +51,7 @@ void Logger::WorkerThread() {
 }
 
 /*!
- * @brief Signals all threads to wake up and finish printing any outstanding messages. Joins worker thread
+ * @brief Signals all threads to wake up and finish printing any outstanding messages.
  */
 void Logger::Shutdown() {
   {
