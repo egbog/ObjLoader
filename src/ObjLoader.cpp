@@ -118,7 +118,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
     std::lock_guard lock(m_threadMutex);
 
     // the time that it was created and the task number it was assigned
-    m_tasks.emplace(std::move(task), m_totalTasks);
+    m_taskQueue.emplace(std::move(task), m_totalTasks);
 
     // If all threads are busy, and we haven't reached maxThreads, spawn a new one
     if (m_idleThreads == 0 && m_workers.size() < m_maxThreadsUser) {
@@ -149,17 +149,17 @@ void ObjLoader::WorkerLoop() {
       m_idleThreads++; // thread is now idle
 
       // make the thread wait until shutdown, or we insert a task
-      m_cv.wait(lock, [this] { return m_shutdown || !m_tasks.empty(); });
+      m_cv.wait(lock, [this] { return m_shutdown || !m_taskQueue.empty(); });
 
       m_idleThreads--; // thread is waking up
 
-      if (m_shutdown && m_tasks.empty()) {
+      if (m_shutdown && m_taskQueue.empty()) {
         break;
       }
 
       // move the next element in the queue to a temp var to run
-      task = std::move(m_tasks.front());
-      m_tasks.pop();
+      task = std::move(m_taskQueue.front());
+      m_taskQueue.pop();
     }
 
     // Measure how long this job waited in the queue

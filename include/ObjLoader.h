@@ -28,7 +28,7 @@ public:
 private:
   std::mutex                m_threadMutex;                                             // Mutex for inserting tasks
   std::vector<std::jthread> m_workers;                                                 // Container for dispatched worker threads
-  std::queue<QueuedTask>    m_tasks;                                                   // Task queue
+  std::queue<QueuedTask>    m_taskQueue;                                                   // Task queue
   std::condition_variable   m_cv;                                                      // Cv to wait threads
   bool                      m_shutdown          = false;
   size_t                    m_idleThreads       = 0;                                   // Amount of dispatched threads that are currently idle
