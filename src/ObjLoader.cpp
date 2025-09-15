@@ -73,14 +73,16 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
   //construct our threaded task
   std::packaged_task task(
     [this, t_state = std::move(state), t_objBuffers = std::move(objBuffers), t_mtlBuffers = std::move(mtlBuffers),
-      t_cacheElapsed = cacheTimer.GetTime(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber = taskNumber]
+      t_cacheElapsed = cacheTimer.Elapsed<std::milli>(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber =
+      taskNumber]
     {
-      const Timer        processTime;
       std::string        log;
       std::ostringstream id;
       id << std::this_thread::get_id();
 
       try {
+        const Timer processTime;
+
         // since lambda is immutable, and we have to std::move the state,
         // un-const t_state to pass the method for modification
         auto m = LoadFileInternal(const_cast<LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
@@ -91,7 +93,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
           m.path,
           id.str(),
           t_taskNumber,
-          processTime.GetTime() + t_cacheElapsed);
+          processTime.Elapsed<std::milli>() + t_cacheElapsed);
 
         m_logger.ThreadSafeLogMessage(log);
 
@@ -116,7 +118,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
     std::lock_guard lock(m_threadMutex);
 
     // the time that it was created and the task number it was assigned
-    m_tasks.emplace(std::move(task), std::chrono::high_resolution_clock::now(), m_totalTasks);
+    m_tasks.emplace(std::move(task), m_totalTasks);
 
     // If all threads are busy, and we haven't reached maxThreads, spawn a new one
     if (m_idleThreads == 0 && m_workers.size() < m_maxThreadsUser) {
@@ -161,8 +163,7 @@ void ObjLoader::WorkerLoop() {
     }
 
     // Measure how long this job waited in the queue
-    auto       now      = std::chrono::high_resolution_clock::now();
-    const auto waitTime = std::chrono::duration_cast<std::chrono::milliseconds>(now - task->enqueueTime);
+    const auto waitTime = task->timer.Elapsed<std::milli>();
 
     // assign threadId once the task gets picked up
     task->threadId = std::this_thread::get_id();
@@ -194,7 +195,6 @@ void ObjLoader::WorkerLoop() {
     task->task(); // run job
   }
 }
-
 
 /*!
  * @brief Parses and processes every file associated with the specified t_path given to LoadFile()
