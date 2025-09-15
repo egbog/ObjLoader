@@ -1,8 +1,9 @@
-
 #include "ObjLoader.h"
 
-#include "Types/Types.h"
 #include "ObjHelpers.h"
+
+#include "Types/Types.h"
+
 #include <iostream>
 #include <ranges>
 
