@@ -213,7 +213,7 @@ Model ObjLoader::LoadFileInternal(LoaderState&                                  
     t_state.tempMeshes.clear();
     ObjHelpers::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
     ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel));
-    ObjHelpers::Triangulate(t_state, meshes, lodLevel);
+    ObjHelpers::Triangulate(t_state, meshes);
     ObjHelpers::CalcTangentSpace(meshes);
     ObjHelpers::JoinIdenticalVertices(meshes);
   }
