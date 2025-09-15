@@ -371,11 +371,11 @@ std::vector<Mesh>& ObjHelpers::GetMeshContainer(LoaderState& t_state, const unsi
 }
 
 /*!
- * @brief TODO
- * @param t_v1 First point of vertex data
- * @param t_v2 Second point of vertex data
- * @param t_v3 Third point of vertex data
- * @return Pair of calculated tangent and bitangent
+ * @brief Computes the tangent and bitangent vectors for a triangle face using its vertex positions, texture coordinates, and normal.
+ * @param t_v1 First vertex of the triangle.
+ * @param t_v2 Second vertex of the triangle.
+ * @param t_v3 Third vertex of the triangle.
+ * @return Pair of normalized tangent and bitangent vectors.
  */
 std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const Vertex& t_v1,
                                                              const Vertex& t_v2,
@@ -403,9 +403,9 @@ std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const Vertex& t_v1,
 }
 
 /*!
- * @brief TODO
- * @param t_state Internal state data used to grab vertex data from temporary containers
- * @param t_meshes List of meshes to triangulate
+ * @brief Converts polygonal face data from the temporary loader state into fully defined triangles, populating each mesh with vertices and indices.
+ * @param t_state Internal state data used to grab vertex, normal, and texture coordinate data from temporary containers.
+ * @param t_meshes List of meshes to populate with triangulated vertex and index data.
  */
 void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes) {
   for (unsigned int a = 0; a < t_meshes.size(); ++a) {
@@ -422,8 +422,8 @@ void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes) 
 }
 
 /*!
- * @brief 
- * @param t_meshes List of meshes to calculate tangents from
+ * @brief Calculates per-vertex tangent and bitangent vectors for all meshes, used in tangent-space normal mapping. Accumulates contributions from each face and normalizes the results.
+ * @param t_meshes List of meshes to process and update with tangent space data.
  */
 void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
