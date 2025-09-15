@@ -1,9 +1,10 @@
-#include <ObjHelpers.h>
+
 #include <ObjLoader.h>
+
+#include "Types/Types.h"
+#include <ObjHelpers.h>
 #include <iostream>
 #include <ranges>
-
-#include <Time/Timer.h>
 
 /*!
  * @brief Initializes the instance and dispatches an appropriate number of threads pre-emptively, ready to pick up tasks
@@ -46,9 +47,9 @@ ObjLoader::~ObjLoader() {
  * @param t_path Relative path to obj file, including file extension
  * @return std::future<Model> of the created task that loads the file
  */
-std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
-  const Timer cacheTimer;
-  LoaderState state;
+std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path) {
+  const Timer     cacheTimer;
+  ol::LoaderState state;
 
   std::unordered_map<unsigned int, std::string> mtlBuffers;
   std::unordered_map<unsigned int, std::string> objBuffers;
@@ -85,7 +86,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
 
         // since lambda is immutable, and we have to std::move the state,
         // un-const t_state to pass the method for modification
-        auto m = LoadFileInternal(const_cast<LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
+        auto m = LoadFileInternal(const_cast<ol::LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
         log = std::format(
           "\nStarted loading task #{} - {} on thread: {}\nSuccessfully loaded task #{} in {:L}\n",
@@ -111,7 +112,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
       }
     });
 
-  std::future<Model> fut = task.get_future();
+  std::future<ol::Model> fut = task.get_future();
 
   // if concurrency is supported
   if (m_maxThreadsUser != 0) {
@@ -141,7 +142,7 @@ std::future<Model> ObjLoader::LoadFile(const std::string& t_path) {
 void ObjLoader::WorkerLoop() {
   while (true) {
     // we made this std::optional to avoid the overhead of default constructing a packaged_task
-    std::optional<QueuedTask> task;
+    std::optional<ol::QueuedTask> task;
 
     {
       std::unique_lock lock(m_threadMutex);
@@ -203,12 +204,12 @@ void ObjLoader::WorkerLoop() {
  * @param t_mtlBuffer Map of every detected mtl loaded into memory as a std::string
  * @return Rvalue Model constructed with the processed data
  */
-Model ObjLoader::LoadFileInternal(LoaderState&                                         t_state,
-                                  const std::unordered_map<unsigned int, std::string>& t_objBuffer,
-                                  const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
+ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                                     t_state,
+                                      const std::unordered_map<unsigned int, std::string>& t_objBuffer,
+                                      const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
   // Load obj
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.lodPaths | std::views::values) {
-    std::vector<Mesh>& meshes = ObjHelpers::GetMeshContainer(t_state, lodLevel);
+    std::vector<ol::Mesh>& meshes = ObjHelpers::GetMeshContainer(t_state, lodLevel);
 
     t_state.tempMeshes.clear();
     ObjHelpers::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
@@ -218,5 +219,5 @@ Model ObjLoader::LoadFileInternal(LoaderState&                                  
     ObjHelpers::JoinIdenticalVertices(meshes);
   }
 
-  return Model(t_state.meshes, t_state.lodMeshes, t_state.materials, t_state.path);
+  return ol::Model(t_state.meshes, t_state.lodMeshes, t_state.materials, t_state.path);
 }

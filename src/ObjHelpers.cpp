@@ -1,7 +1,6 @@
 #include "ObjHelpers.h"
 
-#include "Types/InternalTypes.h"
-#include "Types/SceneTypes.h"
+#include "Types/Types.h"
 
 #include <fast_float.h>
 #include <filesystem>
@@ -34,7 +33,7 @@ std::string ObjHelpers::ReadFileToBuffer(const std::string& t_path) {
  * @brief Finds all lod files if any and their corresponding mtl files and stores them
  * @param t_state Internal state data to store the file paths in
  */
-void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
+void ObjHelpers::CacheFilePaths(ol::LoaderState& t_state) {
   // whole file path
   const std::filesystem::path basePath = t_state.path;
   // root directory of file
@@ -48,7 +47,7 @@ void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
   const std::filesystem::path mtlPath = (dir / fileName).string() + ".mtl";
 
   //store base mesh at lod0
-  t_state.lodPaths[0] = File{.objPath = t_state.path, .mtlPath = mtlPath.string(), .lodLevel = 0};
+  t_state.lodPaths[0] = ol::File{.objPath = t_state.path, .mtlPath = mtlPath.string(), .lodLevel = 0};
 
   for (auto& entry : std::filesystem::directory_iterator(dir)) {
     // skip if it is not a normal file
@@ -95,10 +94,10 @@ void ObjHelpers::CacheFilePaths(LoaderState& t_state) {
  * @param t_buffer String buffer of current file
  * @param t_lodLevel Specified lod level, if any
  */
-void ObjHelpers::ParseObj(LoaderState&       t_state,
-                          std::vector<Mesh>& t_meshes,
-                          const std::string& t_buffer,
-                          const unsigned int t_lodLevel) {
+void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
+                          std::vector<ol::Mesh>& t_meshes,
+                          const std::string&     t_buffer,
+                          const unsigned int     t_lodLevel) {
   int meshCount = -1;
 
   const char* data = t_buffer.data();
@@ -263,7 +262,7 @@ void ObjHelpers::ParseObj(LoaderState&       t_state,
  * @param t_state Internal state data to store texture info
  * @param t_buffer String buffer of current file
  */
-void ObjHelpers::ParseMtl(LoaderState& t_state, const std::string& t_buffer) {
+void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer) {
   // --- First pass: estimate number of materials ---
   size_t      materialCount = 0;
   const char* ptr           = t_buffer.data();
@@ -362,7 +361,7 @@ void ObjHelpers::ParseMtl(LoaderState& t_state, const std::string& t_buffer) {
  * @param t_lodLevel Specified lod level, if any
  * @return Reference to the appropriate container
  */
-std::vector<Mesh>& ObjHelpers::GetMeshContainer(LoaderState& t_state, const unsigned int t_lodLevel) {
+std::vector<ol::Mesh>& ObjHelpers::GetMeshContainer(ol::LoaderState& t_state, const unsigned int t_lodLevel) {
   if (t_lodLevel == 0) {
     return t_state.meshes;
   }
@@ -377,9 +376,9 @@ std::vector<Mesh>& ObjHelpers::GetMeshContainer(LoaderState& t_state, const unsi
  * @param t_v3 Third vertex of the triangle.
  * @return Pair of normalized tangent and bitangent vectors.
  */
-std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const Vertex& t_v1,
-                                                             const Vertex& t_v2,
-                                                             const Vertex& t_v3) {
+std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const ol::Vertex& t_v1,
+                                                             const ol::Vertex& t_v2,
+                                                             const ol::Vertex& t_v3) {
   glm::vec3 tangent1;
   // flat-shaded tangent
   const glm::vec3 normal = glm::normalize(t_v1.normal);
@@ -407,7 +406,7 @@ std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const Vertex& t_v1,
  * @param t_state Internal state data used to grab vertex, normal, and texture coordinate data from temporary containers.
  * @param t_meshes List of meshes to populate with triangulated vertex and index data.
  */
-void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes) {
+void ObjHelpers::Triangulate(ol::LoaderState& t_state, std::vector<ol::Mesh>& t_meshes) {
   for (unsigned int a = 0; a < t_meshes.size(); ++a) {
     for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
       // fetch each triangle from our face indices
@@ -425,12 +424,12 @@ void ObjHelpers::Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes) 
  * @brief Calculates per-vertex tangent and bitangent vectors for all meshes, used in tangent-space normal mapping. Accumulates contributions from each face and normalizes the results.
  * @param t_meshes List of meshes to process and update with tangent space data.
  */
-void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
+void ObjHelpers::CalcTangentSpace(std::vector<ol::Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
     for (size_t i = 0; i < mesh.indices.size(); i += 3) {
-      Vertex& v0 = mesh.vertices[mesh.indices[i]];
-      Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-      Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+      ol::Vertex& v0 = mesh.vertices[mesh.indices[i]];
+      ol::Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
+      ol::Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
 
       const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
 
@@ -459,7 +458,7 @@ void ObjHelpers::CalcTangentSpace(std::vector<Mesh>& t_meshes) {
  * @brief Deduplicates vertices with identical pos, uv and normal data
  * @param t_meshes List of meshes to deduplicate
  */
-void ObjHelpers::JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
+void ObjHelpers::JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
     if (mesh.vertices.empty()) {
       continue;
@@ -477,7 +476,7 @@ void ObjHelpers::JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
         return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
       });
 
-    std::vector<Vertex>       newVertices(n);
+    std::vector<ol::Vertex>   newVertices(n);
     std::vector<unsigned int> remap(n);
 
     // Deduplicate vertices while tracking new index mapping
@@ -486,8 +485,8 @@ void ObjHelpers::JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
     remap[indexMap[0]] = nextIndex;
 
     for (size_t i = 1; i < n; ++i) {
-      const Vertex& curr = mesh.vertices[indexMap[i]];
-      const Vertex& prev = mesh.vertices[indexMap[i - 1]];
+      const ol::Vertex& curr = mesh.vertices[indexMap[i]];
+      const ol::Vertex& prev = mesh.vertices[indexMap[i - 1]];
 
       if (curr != prev) {
         ++nextIndex;
