@@ -59,7 +59,4 @@ void Logger::Shutdown() {
     m_shutdown = true;
   }
   m_cv.notify_all(); // wake worker
-  if (m_thread.joinable()) {
-        m_thread.join(); // wait until worker finishes flushing
-    }
 }
