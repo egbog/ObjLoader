@@ -15,7 +15,7 @@ public:
 
     // Generic elapsed time in any chrono duration type
     template <typename DurationT = std::milli>
-    std::chrono::duration<double, DurationT> Elapsed() const {
+    [[nodiscard]] std::chrono::duration<double, DurationT> Elapsed() const {
         return std::chrono::duration<double, DurationT>(Clock::now() - m_start);
     }
 
