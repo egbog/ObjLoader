@@ -25,6 +25,18 @@ void Logger::ThreadSafeLogMessage(std::string t_entry) {
   m_cv.notify_one();
 }
 
+void Logger::FlushQueue() {
+  std::queue<ol::LogEntry> local;
+  {
+    std::lock_guard lock(m_waitLogMutex);
+    std::swap(local, m_logQueue); // grab everything fast
+  }
+  while (!local.empty()) {
+    std::cout << local.front().message;
+    local.pop();
+  }
+}
+
 /*!
  * @brief A worker intended to be dispatched to a separate thread that will automatically detect messages that are inserted into the queue and will wait if the queue is empty.
  */
@@ -41,12 +53,9 @@ void Logger::WorkerThread() {
       if (m_shutdown && m_logQueue.empty()) {
         break;
       }
-
-      message = std::move(m_logQueue.front()).message;
-      m_logQueue.pop();
     } // release lock
 
-    std::cout << message;
+    FlushQueue();
   }
 }
 
@@ -58,8 +67,13 @@ void Logger::Shutdown() {
     std::lock_guard lock(m_waitLogMutex);
     m_shutdown = true;
   }
+
   m_cv.notify_all(); // wake worker
+
   if (m_thread.joinable()) {
     m_thread.join(); // wait until worker finishes flushing
   }
+
+  // final flush (main thread case)
+  FlushQueue();
 }

@@ -22,11 +22,11 @@ public:
 
   void DispatchWorkerThread();
   void ThreadSafeLogMessage(std::string t_entry);
+  void FlushQueue();
 
 private:
   void WorkerThread();
   void Shutdown();
-
 
   std::jthread             m_thread;       // Worker thread
   std::queue<ol::LogEntry> m_logQueue;     // The message queue
