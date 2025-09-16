@@ -194,7 +194,7 @@ void ObjLoader::WorkerLoop() {
       m_logger.ThreadSafeLogMessage(log);
     }
 
-    task->task(); // run job
+    std::invoke(std::move(optTask->task)); // run job
   }
 }
 
