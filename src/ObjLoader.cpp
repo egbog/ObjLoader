@@ -143,7 +143,7 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path) {
 void ObjLoader::WorkerLoop() {
   while (true) {
     // we made this std::optional to avoid the overhead of default constructing a packaged_task
-    std::optional<ol::QueuedTask> task;
+    std::optional<ol::QueuedTask> optTask;
 
     {
       std::unique_lock lock(m_threadMutex);
@@ -160,34 +160,34 @@ void ObjLoader::WorkerLoop() {
       }
 
       // move the next element in the queue to a temp var to run
-      task = std::move(m_taskQueue.front());
+      optTask = std::move(m_taskQueue.front());
       m_taskQueue.pop();
     }
 
     // Measure how long this job waited in the queue
-    const auto waitTime = task->timer.Elapsed<std::milli>();
+    const auto waitTime = optTask->timer.Elapsed<std::milli>();
 
     // assign threadId once the task gets picked up
-    task->threadId = std::this_thread::get_id();
+    optTask->threadId = std::this_thread::get_id();
 
     std::string log;
 
-    if (task->taskNumber > m_maxPreSpawnThread && task->taskNumber <= m_maxThreadsUser) {
+    if (optTask->taskNumber > m_maxPreSpawnThread && optTask->taskNumber <= m_maxThreadsUser) {
       log = std::format(
         "Task #{} waited {:L} before starting on new thread: {}\n",
-        task->taskNumber,
+        optTask->taskNumber,
         waitTime,
-        task->ThreadIdString());
+        optTask->ThreadIdString());
     }
-    else if (task->taskNumber > m_maxPreSpawnThread) {
+    else if (optTask->taskNumber > m_maxPreSpawnThread) {
       log = std::format(
         "Task #{} waited {:L} in queue before starting on thread: {}\n",
-        task->taskNumber,
+        optTask->taskNumber,
         waitTime,
-        task->ThreadIdString());
+        optTask->ThreadIdString());
     }
     else {
-      log = std::format("Task #{} assigned to already running thread: {}\n", task->taskNumber, task->ThreadIdString());
+      log = std::format("Task #{} assigned to already running thread: {}\n", optTask->taskNumber, optTask->ThreadIdString());
     }
 
     if (!log.empty()) {
