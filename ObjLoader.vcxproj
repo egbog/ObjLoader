@@ -19,16 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\Logger\Logger.cpp" />
     <ClCompile Include="src\ObjHelpers.cpp" />
     <ClCompile Include="src\ObjLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Logger\Logger.h" />
     <ClInclude Include="include\ObjHelpers.h" />
     <ClInclude Include="include\ObjLoader.h" />
+    <ClInclude Include="include\ThreadPool\ThreadPool.h" />
     <ClInclude Include="include\Time\Timer.h" />
-    <ClInclude Include="include\Types\InternalTypes.h" />
-    <ClInclude Include="include\Types\MaterialTypes.h" />
-    <ClInclude Include="include\Types\SceneTypes.h" />
+    <ClInclude Include="include\Types\Types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -52,13 +54,13 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -133,8 +135,7 @@
       <AdditionalIncludeDirectories>C:\Users\Ryan\GitHub\ObjLoader\include;C:\Users\Ryan\GitHub\ObjLoader\external;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -153,8 +154,7 @@
       <AdditionalIncludeDirectories>C:\Users\Ryan\GitHub\ObjLoader\include;C:\Users\Ryan\GitHub\ObjLoader\external;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
