@@ -476,7 +476,8 @@ void ObjHelpers::JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes) {
         return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
       });
 
-    std::vector<ol::Vertex>   newVertices(n);
+    std::vector<ol::Vertex>   newVertices;
+    newVertices.reserve(n);
     std::vector<unsigned int> remap(n);
 
     // Deduplicate vertices while tracking new index mapping
@@ -490,16 +491,19 @@ void ObjHelpers::JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes) {
 
       if (curr != prev) {
         ++nextIndex;
-        newVertices[nextIndex] = curr; // assign instead of emplace_back
+        newVertices.emplace_back(curr);
       }
       remap[indexMap[i]] = nextIndex;
+    }
+
+    for (auto& idx : mesh.indices) {
+      idx = remap[idx];
     }
 
     // Resize newVertices to actual number of unique vertices
     newVertices.resize(nextIndex + 1);
 
     // Remap mesh.indices to the deduplicated set
-    mesh.indices.swap(remap);
     mesh.vertices.swap(newVertices);
   }
 }
