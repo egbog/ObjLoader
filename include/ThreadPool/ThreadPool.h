@@ -2,6 +2,9 @@
 #include "Time/Timer.h"
 
 #include <future>
+#include <iostream>
+
+// TODO: shutdown function?
 
 class Logger;
 
@@ -64,6 +67,10 @@ public:
     }
     m_cv.notify_all();
     // No need to manually join m_workers, jthreads will join automatically
+    const std::string msg = std::format(
+      "\nThread Pool closed after processing {} tasks.\n",
+      static_cast<unsigned int>(m_totalTasks));
+    m_logger->ThreadSafeLogMessage(msg);
   }
 
   ThreadPool& operator=(ThreadPool& t_other)  = delete;
@@ -81,7 +88,6 @@ public:
     // the return type of the function being passed
     using ReturnT = std::invoke_result_t<F, Args...>;
     // Wrap the function and its arguments into a packaged_task
-    //auto task = std::packaged_task<ReturnT()>(std::bind(std::forward<F>(t_f), std::forward<Args>(t_args)...));
 
     auto task = std::packaged_task<ReturnT()>(
       [f = std::forward<F>(t_f), ...args = std::forward<Args>(t_args)]() mutable
@@ -91,6 +97,12 @@ public:
 
     // get future of task with the proper return type
     auto fut = task.get_future();
+
+    // don't allow enqueueing after stopping the pool
+    if(m_shutdown) {
+      m_logger->ThreadSafeLogMessage("Prevented enqueue on stopped Thread Pool");
+      return fut;
+    }
 
     // run on main thread only
     if (m_maxThreadsUser == 0) {
