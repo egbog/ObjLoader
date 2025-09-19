@@ -4,6 +4,7 @@
 
 #include "Types/Types.h"
 
+#include <algorithm>
 #include <iostream>
 #include <ranges>
 
@@ -13,34 +14,9 @@
  * \n A small portion of this will be pre-dispatched
  * \n Note if files are small enough, the amount of dispatched threads may not actually reach this limit
  */
-ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads) {
+ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads),
+                                                  m_threadPool(ThreadPool(m_maxThreadsUser, &m_logger)) {
   m_logger.DispatchWorkerThread();
-
-  // if we are not able to get the amount of max concurrent threads
-  if (m_maxThreadsUser == 0 || m_maxThreadsHw == 0) {
-    // only run on the main thread
-    return;
-  }
-
-  // half of physical cores, at least 1
-  const size_t safeMinimumThreads = std::max<size_t>(1, m_maxThreadsHw / 2);
-
-  // pre-spawn a few threads that can be picked up by new tasks before creating more
-  // only spawn as many threads as the cpu has, if its a double core, only spawn one
-  m_maxPreSpawnThread = std::min(m_maxThreadsUser, safeMinimumThreads);
-
-  for (size_t i = 0; i < m_maxPreSpawnThread; ++i) {
-    m_workers.emplace_back([this] { WorkerLoop(); });
-  }
-}
-
-ObjLoader::~ObjLoader() {
-  {
-    std::lock_guard lock(m_threadMutex);
-    m_shutdown = true;
-  }
-  m_cv.notify_all();
-  // No need to manually join m_workers, jthreads will join automatically
 }
 
 /*!
@@ -73,10 +49,9 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path) {
   unsigned int taskNumber = ++m_totalTasks; // atomic increment
 
   //construct our threaded task
-  std::packaged_task task(
+  /*std::packaged_task task(
     [this, t_state = std::move(state), t_objBuffers = std::move(objBuffers), t_mtlBuffers = std::move(mtlBuffers),
-      t_cacheElapsed = cacheTimer.Elapsed<std::milli>(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber =
-      taskNumber]
+      t_cacheElapsed = cacheTimer.Elapsed(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber = taskNumber]
     {
       std::string        log;
       std::ostringstream id;
@@ -95,7 +70,7 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path) {
           m.path,
           id.str(),
           t_taskNumber,
-          processTime.Elapsed<std::milli>() + t_cacheElapsed);
+          processTime.Elapsed() + t_cacheElapsed);
 
         m_logger.ThreadSafeLogMessage(log);
 
@@ -111,90 +86,58 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path) {
         m_logger.ThreadSafeLogMessage(log);
         throw; // still propagate to future
       }
-    });
+    });*/
 
-  std::future<ol::Model> fut = task.get_future();
+  //std::future<ol::Model> fut = task.get_future();
 
-  // if concurrency is supported
-  if (m_maxThreadsUser != 0) {
-    std::lock_guard lock(m_threadMutex);
-
-    // the time that it was created and the task number it was assigned
-    m_taskQueue.emplace(std::move(task), m_totalTasks);
-
-    // If all threads are busy, and we haven't reached maxThreads, spawn a new one
-    if (m_idleThreads == 0 && m_workers.size() < m_maxThreadsUser) {
-      m_workers.emplace_back([this] { WorkerLoop(); });
-    }
-  }
-  // if not just run the task right away on main thread
-  else {
-    task();
-  }
-
-  m_cv.notify_one();
-
-  return fut;
+  // the time that it was created and the task number it was assigned
+  return m_threadPool.Enqueue(
+    &ObjLoader::ConstructTask,
+    this,
+    std::move(state),
+    std::move(objBuffers),
+    std::move(mtlBuffers),
+    cacheTimer.Elapsed(),
+    taskNumber);
 }
 
-/*!
- * @brief A worker intended to be dispatched on a thread that will automatically pick up tasks that are inserted into the queue and will wait if the queue is empty.
- */
-void ObjLoader::WorkerLoop() {
-  while (true) {
-    // we made this std::optional to avoid the overhead of default constructing a packaged_task
-    std::optional<ol::QueuedTask> optTask;
+ol::Model ObjLoader::ConstructTask(const ol::LoaderState&                               t_state,
+                                   const std::unordered_map<unsigned int, std::string>& t_objBuffers,
+                                   const std::unordered_map<unsigned int, std::string>& t_mtlBuffers,
+                                   const std::chrono::duration<double, std::milli>      t_cacheElapsed,
+                                   unsigned int                                         t_taskNumber) {
+  std::string        log;
+  std::ostringstream id;
+  id << std::this_thread::get_id();
 
-    {
-      std::unique_lock lock(m_threadMutex);
+  try {
+    const Timer processTime;
 
-      m_idleThreads++; // thread is now idle
+    // since lambda is immutable, and we have to std::move the state,
+    // un-const t_state to pass the method for modification
+    auto m = LoadFileInternal(const_cast<ol::LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
-      // make the thread wait until shutdown, or we insert a task
-      m_cv.wait(lock, [this] { return m_shutdown || !m_taskQueue.empty(); });
+    log = std::format(
+      "\nStarted loading task #{} - {} on thread: {}\nSuccessfully loaded task #{} in {:L}\n",
+      t_taskNumber,
+      m.path,
+      id.str(),
+      t_taskNumber,
+      processTime.Elapsed() + t_cacheElapsed);
 
-      m_idleThreads--; // thread is waking up
+    m_logger.ThreadSafeLogMessage(log);
 
-      if (m_shutdown && m_taskQueue.empty()) {
-        break;
-      }
-
-      // move the next element in the queue to a temp var to run
-      optTask = std::move(m_taskQueue.front());
-      m_taskQueue.pop();
-    }
-
-    // Measure how long this job waited in the queue
-    const auto waitTime = optTask->timer.Elapsed<std::milli>();
-
-    // assign threadId once the task gets picked up
-    optTask->threadId = std::this_thread::get_id();
-
-    std::string log;
-
-    if (optTask->taskNumber > m_maxPreSpawnThread && optTask->taskNumber <= m_maxThreadsUser) {
-      log = std::format(
-        "Task #{} waited {:L} before starting on new thread: {}\n",
-        optTask->taskNumber,
-        waitTime,
-        optTask->ThreadIdString());
-    }
-    else if (optTask->taskNumber > m_maxPreSpawnThread) {
-      log = std::format(
-        "Task #{} waited {:L} in queue before starting on thread: {}\n",
-        optTask->taskNumber,
-        waitTime,
-        optTask->ThreadIdString());
-    }
-    else {
-      log = std::format("Task #{} assigned to already running thread: {}\n", optTask->taskNumber, optTask->ThreadIdString());
-    }
-
-    if (!log.empty()) {
-      m_logger.ThreadSafeLogMessage(log);
-    }
-
-    std::invoke(std::move(optTask->task)); // run job
+    return m;
+  }
+  catch (const std::exception& e) {
+    log = std::format("\nError loading model on thread {}: {}", id.str(), e.what());
+    m_logger.ThreadSafeLogMessage(log);
+    throw; // still propagate to future
+  }
+  catch (...) {
+    log = std::format("\nError loading model on thread {}", id.str());
+    m_logger.ThreadSafeLogMessage(log);
+    throw; // still propagate to future
   }
 }
 
