@@ -41,7 +41,7 @@ void Logger::FlushQueue() {
  * @brief A worker intended to be dispatched to a separate thread that will automatically detect messages that are inserted into the queue and will wait if the queue is empty.
  */
 void Logger::WorkerThread() {
-  std::cout << "Logger worker thread dispatched to thread: " << std::this_thread::get_id() << '\n';
+  std::cout << "Logger worker dispatched to thread: " << std::this_thread::get_id() << '\n';
   std::string message;
   while (true) {
     {
