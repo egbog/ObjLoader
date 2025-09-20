@@ -38,3 +38,4 @@ ObjLoader/x64
 *.obj
 *.mtl
 main.cpp
+CheckDuplicates.py
