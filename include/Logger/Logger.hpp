@@ -13,12 +13,15 @@ namespace ol
 class Logger
 {
 public:
+  //-------------------------------------------------------------------------------------------------------------------
+  // Constructors/operators
   Logger() = default;
   ~Logger();
   Logger& operator=(Logger& t_other)  = delete;
   Logger& operator=(Logger&& t_other) = delete;
   Logger(Logger& t_other)             = delete;
   Logger(Logger&& t_other)            = delete;
+  //-------------------------------------------------------------------------------------------------------------------
 
   void DispatchWorkerThread();
   void ThreadSafeLogMessage(std::string t_entry);

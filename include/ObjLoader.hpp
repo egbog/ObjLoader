@@ -1,7 +1,7 @@
 #pragma once
-#include "Logger/Logger.h"
+#include "Logger/Logger.hpp"
 
-#include "ThreadPool/ThreadPool.h"
+#include "ThreadPool/ThreadPool.hpp"
 
 #include <future>
 #include <string>
@@ -11,12 +11,15 @@ class Logger;
 class ObjLoader
 {
 public:
+  //-------------------------------------------------------------------------------------------------------------------
+  // Constructors/operators
   explicit ObjLoader(size_t t_maxThreads = 0);
   ~ObjLoader()                              = default;
   ObjLoader& operator=(ObjLoader& t_other)  = delete;
   ObjLoader& operator=(ObjLoader&& t_other) = delete;
   ObjLoader(ObjLoader& t_other)             = delete;
   ObjLoader(ObjLoader&& t_other)            = delete;
+  //-------------------------------------------------------------------------------------------------------------------
 
   std::future<ol::Model> LoadFile(const std::string& t_path);
 

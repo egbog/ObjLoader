@@ -1,8 +1,8 @@
-#include "ObjLoader.h"
+#include "ObjLoader.hpp"
 
-#include "ObjHelpers.h"
+#include "ObjHelpers.hpp"
 
-#include "Types/Types.h"
+#include "Types/Types.hpp"
 
 #include <algorithm>
 #include <iostream>

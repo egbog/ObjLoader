@@ -1,6 +1,6 @@
-#include "ObjHelpers.h"
+#include "ObjHelpers.hpp"
 
-#include "Types/Types.h"
+#include "Types/Types.hpp"
 
 #include <fast_float.h>
 #include <filesystem>
@@ -201,22 +201,28 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
     }
     else if (line.starts_with("v ")) {
       const char* ptr = line.data() + 2;
-      auto        r1  = fast_float::from_chars(ptr, line.data() + line.size(), x);
-      auto        r2  = fast_float::from_chars(r1.ptr, line.data() + line.size(), y);
-      auto        r3  = fast_float::from_chars(r2.ptr, line.data() + line.size(), z);
+      const char* ptrEnd = line.data() + line.size();
+
+      ptr = ParseFloat(ptr, ptrEnd, x);
+      ptr = ParseFloat(ptr, ptrEnd, y);
+      ptr = ParseFloat(ptr, ptrEnd, z);
       t_state.tempMeshes[meshCount].vertices.emplace_back(x, y, z);
     }
     else if (line.starts_with("vt")) {
-      const char* ptr = line.data() + 3;
-      auto        r1  = fast_float::from_chars(ptr, line.data() + line.size(), x);
-      auto        r2  = fast_float::from_chars(r1.ptr, line.data() + line.size(), y);
+      const char* ptr = line.data() + 2;
+      const char* ptrEnd = line.data() + line.size();
+
+      ptr = ParseFloat(ptr, ptrEnd, x);
+      ptr = ParseFloat(ptr, ptrEnd, y);
       t_state.tempMeshes[meshCount].texCoords.emplace_back(x, y);
     }
     else if (line.starts_with("vn")) {
-      const char* ptr = line.data() + 3;
-      auto        r1  = fast_float::from_chars(ptr, line.data() + line.size(), x);
-      auto        r2  = fast_float::from_chars(r1.ptr, line.data() + line.size(), y);
-      auto        r3  = fast_float::from_chars(r2.ptr, line.data() + line.size(), z);
+      const char* ptr = line.data() + 2;
+      const char* ptrEnd = line.data() + line.size();
+
+      ptr = ParseFloat(ptr, ptrEnd, x);
+      ptr = ParseFloat(ptr, ptrEnd, y);
+      ptr = ParseFloat(ptr, ptrEnd, z);
       t_state.tempMeshes[meshCount].normals.emplace_back(x, y, z);
     }
     else if (line.starts_with("usemtl")) {
@@ -255,6 +261,19 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
       }
     }
   }
+}
+
+const char* ObjHelpers::ParseFloat(const char* t_ptr, const char* t_end, float& t_out) {
+    // skip whitespace
+    while (t_ptr < t_end && std::isspace(static_cast<unsigned char>(*t_ptr))) {
+        ++t_ptr;
+    }
+
+    auto r = fast_float::from_chars(t_ptr, t_end, t_out);
+    if (r.ec != std::errc{}) {
+        throw std::runtime_error("OBJ parse error: invalid float");
+    }
+    return r.ptr;
 }
 
 /*!

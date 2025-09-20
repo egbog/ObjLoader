@@ -20,6 +20,7 @@ public:
                               std::vector<ol::Mesh>& t_meshes,
                               const std::string&     t_buffer,
                               unsigned int           t_lodLevel = 0);
+  static const char* ParseFloat(const char* t_ptr, const char* t_end, float& t_out);
   static void                            ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer);
   static std::vector<ol::Mesh>&          GetMeshContainer(ol::LoaderState& t_state, unsigned int t_lodLevel = 0);
   static std::pair<glm::vec3, glm::vec3> GetTangentCoords(const ol::Vertex& t_v1,
