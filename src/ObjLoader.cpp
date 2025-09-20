@@ -163,5 +163,5 @@ ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                          
     ObjHelpers::JoinIdenticalVertices(meshes);
   }
 
-  return ol::Model(t_state.meshes, t_state.lodMeshes, t_state.materials, t_state.path);
+  return ol::Model(t_state.meshes, t_state.materials, t_state.path);
 }

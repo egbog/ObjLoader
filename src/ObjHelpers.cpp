@@ -381,11 +381,7 @@ void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer)
  * @return Reference to the appropriate container
  */
 std::vector<ol::Mesh>& ObjHelpers::GetMeshContainer(ol::LoaderState& t_state, const unsigned int t_lodLevel) {
-  if (t_lodLevel == 0) {
-    return t_state.meshes;
-  }
-
-  return t_state.lodMeshes[t_lodLevel];
+  return t_state.meshes[t_lodLevel];
 }
 
 /*!

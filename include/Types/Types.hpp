@@ -35,8 +35,7 @@ namespace ol
     std::string mtlFileName;
 
     std::map<unsigned int, File>              lodPaths;
-    std::vector<Mesh>                         meshes;     // final calculated meshes
-    std::map<unsigned int, std::vector<Mesh>> lodMeshes;
+    std::map<unsigned int, std::vector<Mesh>> meshes; // final calculated meshes
     std::vector<Material>                     materials;  // final materials
     std::vector<TempMeshes>                   tempMeshes; // interim storage
   };
@@ -94,10 +93,10 @@ namespace ol
       return *this;
     }*/
 
-    std::string name;
-    std::string material;
-    unsigned    lodLevel   = 0;
-    int         meshNumber = -1;
+    std::string  name;
+    std::string  material;
+    unsigned int lodLevel   = 0;
+    int          meshNumber = -1;
 
     std::vector<Vertex> vertices; // this is fine as an AoS, we access the whole struct at any given time
     Indices             indices;
@@ -107,11 +106,9 @@ namespace ol
   {
     //-------------------------------------------------------------------------------------------------------------------
     // Constructors/operators
-    explicit Model(std::vector<Mesh>&                         t_meshes,
-                   std::map<unsigned int, std::vector<Mesh>>& t_lods,
+    explicit Model(std::map<unsigned int, std::vector<Mesh>>& t_meshes,
                    std::vector<Material>&                     t_materials,
                    std::string&                               t_path) : meshes(std::move(t_meshes)),
-                                                                        lods(std::move(t_lods)),
                                                                         materials(std::move(t_materials)),
                                                                         path(std::move(t_path)) {}
 
@@ -122,8 +119,7 @@ namespace ol
     Model& operator=(Model&&) noexcept = default;
     //-------------------------------------------------------------------------------------------------------------------
 
-    std::vector<Mesh>                         meshes;
-    std::map<unsigned int, std::vector<Mesh>> lods;
+    std::map<unsigned int, std::vector<Mesh>> meshes;
     std::vector<Material>                     materials;
     std::string                               path;
   };
@@ -136,4 +132,3 @@ namespace ol
     std::vector<std::string> normalName;
   };
 }
-
