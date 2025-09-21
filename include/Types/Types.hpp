@@ -49,20 +49,20 @@ namespace ol
     glm::vec3 biTangent;
 
     // == operator override for calculateTriangle
-    bool operator==(const Vertex& t_other) const {
+    constexpr bool operator==(const Vertex& t_other) const {
       return position == t_other.position && normal == t_other.normal && texCoords == t_other.texCoords;
     }
 
-    bool operator!=(const Vertex& t_other) const {
+    constexpr bool operator!=(const Vertex& t_other) const {
       return !(*this == t_other);
     }
 
-    [[nodiscard]] auto AsArray() const noexcept {
+    [[nodiscard]] constexpr auto AsArray() const noexcept {
       return std::array{position.x, position.y, position.z, normal.x, normal.y, normal.z, texCoords.x, texCoords.y};
     }
 
 
-    bool operator<(const Vertex& t_other) const noexcept {
+    constexpr bool operator<(const Vertex& t_other) const noexcept {
       return AsArray() < t_other.AsArray();
     }
   };

@@ -54,7 +54,7 @@ public:
   template <typename F, typename... Args>
   std::future<std::invoke_result_t<F, Args...>> Enqueue(F&& t_f, Args&&... t_args);
 
-  [[nodiscard]] size_t ThreadCount() const { return m_workerPool.size(); }
+  [[nodiscard]] constexpr size_t ThreadCount() const { return m_workerPool.size(); }
 
 private:
   /*!

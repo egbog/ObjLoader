@@ -23,7 +23,7 @@ public:
 
   std::future<ol::Model> LoadFile(const std::string& t_path);
 
-  size_t WorkerCount() const { return m_threadPool.ThreadCount(); }
+  [[nodiscard]] constexpr size_t WorkerCount() const { return m_threadPool.ThreadCount(); }
 
 private:
   size_t                    m_maxThreadsUser = 0; // User-defined maximum number of dispatched threads
