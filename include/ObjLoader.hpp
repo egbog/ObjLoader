@@ -3,8 +3,15 @@
 
 #include "ThreadPool/ThreadPool.hpp"
 
+#include "Types/Types.hpp"
+
 #include <future>
 #include <string>
+
+namespace ol
+{
+  enum class Flag : uint8_t;
+}
 
 class Logger;
 
@@ -21,7 +28,7 @@ public:
   ObjLoader(ObjLoader&& t_other)            = delete;
   //-------------------------------------------------------------------------------------------------------------------
 
-  std::future<ol::Model> LoadFile(const std::string& t_path);
+  std::future<ol::Model> LoadFile(const std::string& t_path, ol::Flag t_flags = ol::Flag::Triangulate);
 
   [[nodiscard]] constexpr size_t WorkerCount() const { return m_threadPool.ThreadCount(); }
 

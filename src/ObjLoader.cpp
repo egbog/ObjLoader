@@ -22,11 +22,12 @@ ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads)
 /*!
  * @brief Loads an obj + mtl file asynchronously
  * @param t_path Relative path to obj file, including file extension
+ * @param t_flags 
  * @return std::future<Model> of the created task that loads the file
  */
-std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path) {
+std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path, ol::Flag t_flags) {
   const Timer     cacheTimer;
-  ol::LoaderState state;
+  ol::LoaderState state(t_flags);
 
   std::unordered_map<unsigned int, std::string> mtlBuffers;
   std::unordered_map<unsigned int, std::string> objBuffers;
@@ -158,10 +159,23 @@ ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                          
     t_state.tempMeshes.clear();
     ObjHelpers::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
     ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel));
-    ObjHelpers::Triangulate(t_state, meshes);
-    ObjHelpers::CalcTangentSpace(meshes);
-    ObjHelpers::JoinIdenticalVertices(meshes);
+
+    if ((t_state.flags & ol::Flag::Triangulate) == ol::Flag::Triangulate) {
+      ObjHelpers::Triangulate(t_state, meshes);
+    }
+
+    if ((t_state.flags & ol::Flag::CalculateTangents) == ol::Flag::CalculateTangents) {
+      ObjHelpers::CalcTangentSpace(meshes);
+    }
+
+    if ((t_state.flags & ol::Flag::JoinIdentical) == ol::Flag::JoinIdentical) {
+      ObjHelpers::JoinIdenticalVertices(meshes);
+    }
   }
 
-  return ol::Model(t_state.meshes, t_state.materials, t_state.path);
+  if ((t_state.flags & ol::Flag::CombineMeshes) == ol::Flag::CombineMeshes) {
+    ObjHelpers::CombineMeshes(t_state);
+  }
+
+  return ol::Model(t_state.meshes, t_state.combinedMeshes, t_state.materials, t_state.path);
 }
