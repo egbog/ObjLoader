@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <numeric>
+#include <ranges>
 
 #include <glm/geometric.hpp>
 
@@ -200,7 +201,7 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
       t_meshes[meshCount].lodLevel   = t_lodLevel;
     }
     else if (line.starts_with("v ")) {
-      const char* ptr = line.data() + 2;
+      const char* ptr    = line.data() + 2;
       const char* ptrEnd = line.data() + line.size();
 
       ptr = ParseFloat(ptr, ptrEnd, x);
@@ -209,7 +210,7 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
       t_state.tempMeshes[meshCount].vertices.emplace_back(x, y, z);
     }
     else if (line.starts_with("vt")) {
-      const char* ptr = line.data() + 2;
+      const char* ptr    = line.data() + 2;
       const char* ptrEnd = line.data() + line.size();
 
       ptr = ParseFloat(ptr, ptrEnd, x);
@@ -217,7 +218,7 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
       t_state.tempMeshes[meshCount].texCoords.emplace_back(x, y);
     }
     else if (line.starts_with("vn")) {
-      const char* ptr = line.data() + 2;
+      const char* ptr    = line.data() + 2;
       const char* ptrEnd = line.data() + line.size();
 
       ptr = ParseFloat(ptr, ptrEnd, x);
@@ -264,16 +265,16 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
 }
 
 const char* ObjHelpers::ParseFloat(const char* t_ptr, const char* t_end, float& t_out) {
-    // skip whitespace
-    while (t_ptr < t_end && std::isspace(static_cast<unsigned char>(*t_ptr))) {
-        ++t_ptr;
-    }
+  // skip whitespace
+  while (t_ptr < t_end && std::isspace(static_cast<unsigned char>(*t_ptr))) {
+    ++t_ptr;
+  }
 
-    auto r = fast_float::from_chars(t_ptr, t_end, t_out);
-    if (r.ec != std::errc{}) {
-        throw std::runtime_error("OBJ parse error: invalid float");
-    }
-    return r.ptr;
+  auto r = fast_float::from_chars(t_ptr, t_end, t_out);
+  if (r.ec != std::errc{}) {
+    throw std::runtime_error("OBJ parse error: invalid float");
+  }
+  return r.ptr;
 }
 
 /*!
@@ -486,12 +487,12 @@ void ObjHelpers::JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes) {
     // Sort indices by vertex value
     std::ranges::sort(
       indexMap,
-      [&](const unsigned int t_a, const unsigned int t_b)
+      [&] (const unsigned int t_a, const unsigned int t_b)
       {
         return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
       });
 
-    std::vector<ol::Vertex>   newVertices;
+    std::vector<ol::Vertex> newVertices;
     newVertices.reserve(n);
     std::vector<unsigned int> remap(n);
 
@@ -520,5 +521,47 @@ void ObjHelpers::JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes) {
 
     // Remap mesh.indices to the deduplicated set
     mesh.vertices.swap(newVertices);
+  }
+}
+
+void ObjHelpers::CombineMeshes(ol::LoaderState& t_state) {
+  auto initFrom = [&] (const ol::Mesh& t_src, ol::Mesh& t_dst)
+  {
+    t_dst.name       = t_src.name;
+    t_dst.material   = t_src.material;
+    t_dst.meshNumber = t_src.meshNumber;
+    t_dst.lodLevel   = t_src.lodLevel;
+  };
+
+  for (auto& lod : t_state.meshes | std::views::values) {
+    unsigned int lodLevel   = lod[0].lodLevel;
+    size_t       totalVerts = 0, totalIndices = 0;
+    unsigned int baseVertex = 0;
+
+    initFrom(lod[0], t_state.combinedMeshes[lodLevel]);
+
+    // check size for reserve
+    for (auto& mesh : lod) {
+      totalVerts += mesh.vertices.size();
+      totalIndices += mesh.indices.size();
+    }
+
+    t_state.combinedMeshes[lodLevel].vertices.reserve(totalVerts);
+    t_state.combinedMeshes[lodLevel].indices.reserve(totalIndices);
+
+    // combine meshes
+    for (auto& mesh : lod) {
+      // append indices with offset
+      for (const auto idx : mesh.indices) {
+        t_state.combinedMeshes[lodLevel].indices.push_back(idx + baseVertex);
+      }
+
+      t_state.combinedMeshes[lodLevel].vertices.insert(
+        t_state.combinedMeshes[lodLevel].vertices.end(),
+        mesh.vertices.begin(),
+        mesh.vertices.end());
+
+      baseVertex += static_cast<unsigned int>(mesh.vertices.size());
+    }
   }
 }

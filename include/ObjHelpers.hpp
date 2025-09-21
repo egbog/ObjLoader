@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 #include <string>
 #include <vector>
 
@@ -29,4 +30,5 @@ public:
   static void Triangulate(ol::LoaderState& t_state, std::vector<ol::Mesh>& t_meshes);
   static void CalcTangentSpace(std::vector<ol::Mesh>& t_meshes);
   static void JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes);
+  static void CombineMeshes(ol::LoaderState& t_state);
 };
