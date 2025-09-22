@@ -86,7 +86,7 @@ namespace ol
     //-------------------------------------------------------------------------------------------------------------------
     // Constructors/operators
     explicit Model(std::map<unsigned int, std::vector<Mesh>>& t_meshes,
-                   std::map<unsigned int, Mesh>               t_combinedMeshes,
+                   std::vector<Mesh>&                         t_combinedMeshes,
                    std::vector<Material>&                     t_materials,
                    std::string&                               t_path) : meshes(std::move(t_meshes)),
                                                                         combinedMeshes(std::move(t_combinedMeshes)),
@@ -101,7 +101,7 @@ namespace ol
     //-------------------------------------------------------------------------------------------------------------------
 
     std::map<unsigned int, std::vector<Mesh>> meshes;
-    std::map<unsigned int, Mesh>              combinedMeshes;
+    std::vector<Mesh>                         combinedMeshes;
     std::vector<Material>                     materials;
     std::string                               path;
   };

@@ -49,6 +49,8 @@ void ObjHelpers::CacheFilePaths(ol::LoaderState& t_state) {
   // file path to corresponding mtl file
   const std::filesystem::path mtlPath = (dir / fileName).string() + ".mtl";
 
+  t_state.filePaths.emplace_back();
+
   //store base mesh at lod0
   t_state.filePaths[0] = ol::File{.objPath = t_state.path, .mtlPath = mtlPath.string(), .lodLevel = 0};
 
@@ -71,23 +73,24 @@ void ObjHelpers::CacheFilePaths(ol::LoaderState& t_state) {
 
       // Extract numeric part after "_lod"
       std::string lodNumStr = entryFileName.string().substr(pos + fileName.string().length() + 4);
-      int         lodIndex;
       try {
-        lodIndex = std::stoi(lodNumStr);
+        unsigned int lodIndex = std::stoi(lodNumStr);
+
+        // create element if it doesn't exist
+        if (lodIndex >= t_state.filePaths.size()) {
+          t_state.filePaths.emplace_back("", "", lodIndex);
+        }
+
+        // Assign paths depending on file type
+        if (entryExtension == ".obj") {
+          t_state.filePaths[lodIndex].objPath = entry.path().string();
+        }
+        else if (entryExtension == ".mtl") {
+          t_state.filePaths[lodIndex].mtlPath = entry.path().string();
+        }
       }
       catch (...) {
-        continue; // invalid suffix, skip file
-      }
-
-      // Get reference to lod entry in map (created if not exists)
-      t_state.filePaths[lodIndex].lodLevel = lodIndex;
-
-      // Assign paths depending on file type
-      if (entryExtension == ".obj") {
-        t_state.filePaths[lodIndex].objPath = entry.path().string();
-      }
-      else if (entryExtension == ".mtl") {
-        t_state.filePaths[lodIndex].mtlPath = entry.path().string();
+        break; // invalid suffix, skip file
       }
     }
   }
@@ -542,6 +545,8 @@ void ObjHelpers::CombineMeshes(ol::LoaderState& t_state) {
     unsigned int lodLevel   = lod[0].lodLevel;
     size_t       totalVerts = 0, totalIndices = 0;
     unsigned int baseVertex = 0;
+
+    t_state.combinedMeshes.emplace_back();
 
     initFrom(lod[0], t_state.combinedMeshes[lodLevel]);
 
