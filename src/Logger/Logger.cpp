@@ -47,22 +47,22 @@ void Logger::FlushQueue() {
     switch (severity) {
       case ol::Info: {
         SetConsoleTextAttribute(hConsole, 7);
-        message = std::format("Info: {}\n", message);
+        message = std::format("[ThreadPool] - Info: {}\n", message);
         break;
       }
       case ol::Warning: {
         SetConsoleTextAttribute(hConsole, 6);
-        message = std::format("Warning: {}\n", message);
+        message = std::format("[ThreadPool] - Warning: {}\n", message);
         break;
       }
       case ol::Error: {
         SetConsoleTextAttribute(hConsole, 4);
-        message = std::format("Error: {}\n", message);
+        message = std::format("[ThreadPool] - Error: {}\n", message);
         break;
       }
       case ol::Success: {
         SetConsoleTextAttribute(hConsole, 2);
-        message = std::format("Success: {}\n", message);
+        message = std::format("[ThreadPool] - Success: {}\n", message);
         break;
       }
       case ol::None: {
