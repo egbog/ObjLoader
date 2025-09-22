@@ -50,7 +50,7 @@ void ObjHelpers::CacheFilePaths(ol::LoaderState& t_state) {
   const std::filesystem::path mtlPath = (dir / fileName).string() + ".mtl";
 
   //store base mesh at lod0
-  t_state.lodPaths[0] = ol::File{.objPath = t_state.path, .mtlPath = mtlPath.string(), .lodLevel = 0};
+  t_state.filePaths[0] = ol::File{.objPath = t_state.path, .mtlPath = mtlPath.string(), .lodLevel = 0};
 
   if ((t_state.flags & ol::Flag::Lods) == ol::Flag::Lods) {
     // find lods
@@ -80,14 +80,14 @@ void ObjHelpers::CacheFilePaths(ol::LoaderState& t_state) {
       }
 
       // Get reference to lod entry in map (created if not exists)
-      t_state.lodPaths[lodIndex].lodLevel = lodIndex;
+      t_state.filePaths[lodIndex].lodLevel = lodIndex;
 
       // Assign paths depending on file type
       if (entryExtension == ".obj") {
-        t_state.lodPaths[lodIndex].objPath = entry.path().string();
+        t_state.filePaths[lodIndex].objPath = entry.path().string();
       }
       else if (entryExtension == ".mtl") {
-        t_state.lodPaths[lodIndex].mtlPath = entry.path().string();
+        t_state.filePaths[lodIndex].mtlPath = entry.path().string();
       }
     }
   }

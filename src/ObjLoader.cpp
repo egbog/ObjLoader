@@ -38,7 +38,7 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path, ol::Flag t
   ObjHelpers::CacheFilePaths(state);
 
   // read all files to memory on main thread
-  for (const auto& [objPath, mtlPath, lodLevel] : state.lodPaths | std::views::values) {
+  for (const auto& [objPath, mtlPath, lodLevel] : state.filePaths | std::views::values) {
     objBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(objPath);
 
     if (mtlPath.empty()) {
@@ -109,7 +109,7 @@ ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                          
                                       const std::unordered_map<unsigned int, std::string>& t_objBuffer,
                                       const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
   // Load obj
-  for (const auto& [objPath, mtlPath, lodLevel] : t_state.lodPaths | std::views::values) {
+  for (const auto& [objPath, mtlPath, lodLevel] : t_state.filePaths | std::views::values) {
     std::vector<ol::Mesh>& meshes = ObjHelpers::GetMeshContainer(t_state, lodLevel);
 
     t_state.tempMeshes.clear();

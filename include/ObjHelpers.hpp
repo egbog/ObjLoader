@@ -38,7 +38,7 @@ namespace ol
     std::string mtlFileName;
     Flag        flags;
 
-    std::map<unsigned int, File>              lodPaths;
+    std::map<unsigned int, File>              filePaths;
     std::map<unsigned int, std::vector<Mesh>> meshes; // final calculated meshes
     std::map<unsigned int, Mesh>              combinedMeshes;
     std::vector<Material>                     materials;  // final materials
