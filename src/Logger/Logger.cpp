@@ -106,6 +106,7 @@ void Logger::WorkerThread() {
       }
     } // release lock
 
+    // print logs
     FlushQueue();
   }
 }
