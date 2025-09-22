@@ -4,9 +4,19 @@
 
 namespace ol
 {
+  enum LogSeverity : uint8_t
+  {
+    None,
+    Info,
+    Warning,
+    Error,
+    Success
+  };
+
   struct LogEntry
   {
     std::string message;
+    LogSeverity severity;
   };
 }
 
@@ -24,10 +34,14 @@ public:
   //-------------------------------------------------------------------------------------------------------------------
 
   void DispatchWorkerThread();
-  void ThreadSafeLogMessage(std::string t_entry);
+  void LogInfo(const std::string& t_entry);
+  void LogWarning(const std::string& t_entry);
+  void LogError(const std::string& t_entry);
+  void LogSuccess(const std::string& t_entry);
   void FlushQueue();
 
 private:
+  void ThreadSafeLogMessage(std::string t_entry, ol::LogSeverity t_severity);
   void WorkerThread();
   void Shutdown();
 

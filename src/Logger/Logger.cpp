@@ -1,6 +1,10 @@
 #include "Logger/Logger.hpp"
 
+#include "ThreadPool/ThreadPool.hpp"
+
+#include <format>
 #include <iostream>
+#include <windows.h>
 
 Logger::~Logger() {
   Shutdown();
@@ -13,36 +17,83 @@ void Logger::DispatchWorkerThread() {
   m_thread = std::jthread([this] { WorkerThread(); });
 }
 
-/*!
- * @brief Inserts a log message into a queue in a thread-safe manner
- * @param t_entry The message
- */
-void Logger::ThreadSafeLogMessage(std::string t_entry) {
-  {
-    std::lock_guard lock(m_waitLogMutex);
-    m_logQueue.emplace(std::move(t_entry));
-  }
-  m_cv.notify_one();
+void Logger::LogInfo(const std::string& t_entry) {
+  ThreadSafeLogMessage(t_entry, ol::Info);
+}
+
+void Logger::LogWarning(const std::string& t_entry) {
+  ThreadSafeLogMessage(t_entry, ol::Warning);
+}
+
+void Logger::LogError(const std::string& t_entry) {
+  ThreadSafeLogMessage(t_entry, ol::Error);
+}
+
+void Logger::LogSuccess(const std::string& t_entry) {
+  ThreadSafeLogMessage(t_entry, ol::Success);
 }
 
 void Logger::FlushQueue() {
+  HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
   std::queue<ol::LogEntry> local;
   {
     std::lock_guard lock(m_waitLogMutex);
     std::swap(local, m_logQueue); // grab everything fast
   }
+
   while (!local.empty()) {
-    std::cout << local.front().message;
+    auto [message, severity] = local.front();
+    switch (severity) {
+      case ol::Info: {
+        SetConsoleTextAttribute(hConsole, 7);
+        message = std::format("Info: {}\n", message);
+        break;
+      }
+      case ol::Warning: {
+        SetConsoleTextAttribute(hConsole, 6);
+        message = std::format("Warning: {}\n", message);
+        break;
+      }
+      case ol::Error: {
+        SetConsoleTextAttribute(hConsole, 4);
+        message = std::format("Error: {}\n", message);
+        break;
+      }
+      case ol::Success: {
+        SetConsoleTextAttribute(hConsole, 2);
+        message = std::format("Success: {}\n", message);
+        break;
+      }
+      case ol::None: {
+        SetConsoleTextAttribute(hConsole, 7);
+        break;
+      }
+    }
+    std::cout << message;
+    SetConsoleTextAttribute(hConsole, 7);
     local.pop();
   }
+}
+
+/*!
+ * @brief Inserts a log message into a queue in a thread-safe manner
+ * @param t_entry The message
+ * @param t_severity Severity of the message
+ */
+void Logger::ThreadSafeLogMessage(std::string t_entry, ol::LogSeverity t_severity) {
+  {
+    std::lock_guard lock(m_waitLogMutex);
+    m_logQueue.emplace(std::move(t_entry), t_severity);
+  }
+  m_cv.notify_one();
 }
 
 /*!
  * @brief A worker intended to be dispatched to a separate thread that will automatically detect messages that are inserted into the queue and will wait if the queue is empty.
  */
 void Logger::WorkerThread() {
-  std::cout << "Logger worker dispatched to thread: " << std::this_thread::get_id() << '\n';
-  std::string message;
+  LogInfo(std::format("Logger worker dispatched to thread: {}", ol::QueuedTask::ThreadIdString(std::this_thread::get_id())));
   while (true) {
     {
       std::unique_lock lock(m_waitLogMutex);

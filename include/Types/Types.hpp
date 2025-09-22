@@ -9,56 +9,14 @@
 
 namespace ol
 {
-  struct Material;
-  struct Mesh;
   using Indices = std::vector<unsigned int>;
 
-  struct TempMeshes
+  struct Material
   {
-    std::vector<glm::vec3>    vertices;
-    std::vector<glm::vec2>    texCoords;
-    std::vector<glm::vec3>    normals;
-    std::vector<glm::uvec3>   faceIndices;
-    std::vector<unsigned int> indices;
-  };
-
-  struct File
-  {
-    std::string  objPath;
-    std::string  mtlPath;
-    unsigned int lodLevel = 0;
-  };
-
-  enum class Flag : uint8_t
-  {
-    None              = 0,
-    Triangulate       = 1 << 0,
-    CalculateTangents = 1 << 1,
-    JoinIdentical     = 1 << 2,
-    CombineMeshes     = 1 << 3
-  };
-
-  // Enable bitwise operations for the enum
-  constexpr Flag operator|(Flag t_a, Flag t_b) {
-    return static_cast<Flag>(static_cast<uint8_t>(t_a) | static_cast<uint8_t>(t_b));
-  }
-
-  constexpr Flag operator&(Flag t_a, Flag t_b) {
-    return static_cast<Flag>(static_cast<uint8_t>(t_a) & static_cast<uint8_t>(t_b));
-  }
-
-  struct LoaderState
-  {
-    explicit    LoaderState(const Flag t_flags) : flags(t_flags) {}
-    std::string path;
-    std::string mtlFileName;
-    Flag        flags;
-
-    std::map<unsigned int, File>              lodPaths;
-    std::map<unsigned int, std::vector<Mesh>> meshes; // final calculated meshes
-    std::map<unsigned int, Mesh>              combinedMeshes;
-    std::vector<Material>                     materials;  // final materials
-    std::vector<TempMeshes>                   tempMeshes; // interim storage
+    std::string              name;
+    std::vector<std::string> diffuseName;
+    std::vector<std::string> specularName;
+    std::vector<std::string> normalName;
   };
 
   struct Vertex
@@ -146,13 +104,5 @@ namespace ol
     std::map<unsigned int, Mesh>              combinedMeshes;
     std::vector<Material>                     materials;
     std::string                               path;
-  };
-
-  struct Material
-  {
-    std::string              name;
-    std::vector<std::string> diffuseName;
-    std::vector<std::string> specularName;
-    std::vector<std::string> normalName;
   };
 }

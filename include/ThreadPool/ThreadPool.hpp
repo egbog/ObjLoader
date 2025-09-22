@@ -11,9 +11,6 @@ class Logger;
 
 namespace ol
 {
-  struct LoaderState;
-  struct Model;
-
   struct QueuedTask
   {
     QueuedTask() = delete;
@@ -22,9 +19,9 @@ namespace ol
       timer(Timer()),
       taskNumber(t_taskNumber) {}
 
-    [[nodiscard]] std::string ThreadIdString() const {
+    [[nodiscard]] static std::string ThreadIdString(const std::thread::id& t_id) {
       std::ostringstream s;
-      s << threadId;
+      s << t_id;
       return s.str();
     }
 

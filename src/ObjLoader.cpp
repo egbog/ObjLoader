@@ -41,56 +41,17 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path, ol::Flag t
   for (const auto& [objPath, mtlPath, lodLevel] : state.lodPaths | std::views::values) {
     objBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(objPath);
 
-    if (!mtlPath.empty()) {
-      mtlBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(mtlPath);
+    if (mtlPath.empty()) {
+      m_logger.LogWarning(std::format("No mtl found for file: {}", objPath));
     }
+
+    mtlBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(mtlPath);
   }
 
   // assign task number before creating task and pass by value
   unsigned int taskNumber = ++m_totalTasks; // atomic increment
 
   //construct our threaded task
-  /*std::packaged_task task(
-    [this, t_state = std::move(state), t_objBuffers = std::move(objBuffers), t_mtlBuffers = std::move(mtlBuffers),
-      t_cacheElapsed = cacheTimer.Elapsed(), t_mainThreadId = std::this_thread::get_id(), t_taskNumber = taskNumber]
-    {
-      std::string        log;
-      std::ostringstream id;
-      id << std::this_thread::get_id();
-
-      try {
-        const Timer processTime;
-
-        // since lambda is immutable, and we have to std::move the state,
-        // un-const t_state to pass the method for modification
-        auto m = LoadFileInternal(const_cast<ol::LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
-
-        log = std::format(
-          "\nStarted loading task #{} - {} on thread: {}\nSuccessfully loaded task #{} in {:L}\n",
-          t_taskNumber,
-          m.path,
-          id.str(),
-          t_taskNumber,
-          processTime.Elapsed() + t_cacheElapsed);
-
-        m_logger.ThreadSafeLogMessage(log);
-
-        return m;
-      }
-      catch (const std::exception& e) {
-        log = std::format("\nError loading model on thread {}: {}", id.str(), e.what());
-        m_logger.ThreadSafeLogMessage(log);
-        throw; // still propagate to future
-      }
-      catch (...) {
-        log = std::format("\nError loading model on thread {}", id.str());
-        m_logger.ThreadSafeLogMessage(log);
-        throw; // still propagate to future
-      }
-    });*/
-
-  //std::future<ol::Model> fut = task.get_future();
-
   // the time that it was created and the task number it was assigned
   return m_threadPool.Enqueue(
     &ObjLoader::ConstructTask,
@@ -113,31 +74,26 @@ ol::Model ObjLoader::ConstructTask(const ol::LoaderState&                       
 
   try {
     const Timer processTime;
+    log = std::format("Started loading task #{} - {} on thread: {}", t_taskNumber, t_state.path, id.str());
+    m_logger.LogInfo(log);
 
     // since lambda is immutable, and we have to std::move the state,
     // un-const t_state to pass the method for modification
     auto m = LoadFileInternal(const_cast<ol::LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
-    log = std::format(
-      "\nStarted loading task #{} - {} on thread: {}\nSuccessfully loaded task #{} in {:L}\n",
-      t_taskNumber,
-      m.path,
-      id.str(),
-      t_taskNumber,
-      processTime.Elapsed() + t_cacheElapsed);
-
-    m_logger.ThreadSafeLogMessage(log);
+    log = std::format("Successfully loaded task #{} in {:L}", t_taskNumber, processTime.Elapsed() + t_cacheElapsed);
+    m_logger.LogSuccess(log);
 
     return m;
   }
   catch (const std::exception& e) {
-    log = std::format("\nError loading model on thread {}: {}", id.str(), e.what());
-    m_logger.ThreadSafeLogMessage(log);
+    log = std::format("Error loading model on thread {}: {}", id.str(), e.what());
+    m_logger.LogError(log);
     throw; // still propagate to future
   }
   catch (...) {
-    log = std::format("\nError loading model on thread {}", id.str());
-    m_logger.ThreadSafeLogMessage(log);
+    log = std::format("Error loading model on thread {}", id.str());
+    m_logger.LogError(log);
     throw; // still propagate to future
   }
 }

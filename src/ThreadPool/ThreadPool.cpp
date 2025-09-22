@@ -33,9 +33,9 @@ ThreadPool::~ThreadPool() {
   m_cv.notify_all();
   // No need to manually join m_workers, jthreads will join automatically
   const std::string msg = std::format(
-    "\nThread Pool closed after processing {} tasks.\n",
+    "Thread Pool closed after processing {} tasks.",
     static_cast<unsigned int>(m_totalTasks));
-  m_logger->ThreadSafeLogMessage(msg);
+  m_logger->LogInfo(msg);
 }
 
 void ThreadPool::WorkerLoop() {
@@ -68,27 +68,27 @@ void ThreadPool::WorkerLoop() {
 
     if (optTask->taskNumber > m_maxPreSpawnThread && optTask->taskNumber <= m_maxThreadsUser) {
       log = std::format(
-        "Task #{} waited {:L} before starting on new thread: {}\n",
+        "Task #{} waited {:L} before starting on new thread: {}",
         optTask->taskNumber,
         waitTime,
-        optTask->ThreadIdString());
+        optTask->ThreadIdString(optTask->threadId));
     }
     else if (optTask->taskNumber > m_maxPreSpawnThread) {
       log = std::format(
-        "Task #{} waited {:L} in queue before starting on thread: {}\n",
+        "Task #{} waited {:L} in queue before starting on thread: {}",
         optTask->taskNumber,
         waitTime,
-        optTask->ThreadIdString());
+        optTask->ThreadIdString(optTask->threadId));
     }
     else {
       log = std::format(
-        "Task #{} assigned to already running thread: {}\n",
+        "Task #{} assigned to already running thread: {}",
         optTask->taskNumber,
-        optTask->ThreadIdString());
+        optTask->ThreadIdString(optTask->threadId));
     }
 
     if (!log.empty()) {
-      m_logger->ThreadSafeLogMessage(log);
+      m_logger->LogInfo(log);
     }
 
     optTask->task(); // run job

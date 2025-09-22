@@ -1,5 +1,7 @@
 #include "ObjHelpers.hpp"
 
+#include "ObjLoader.hpp"
+
 #include "Types/Types.hpp"
 
 #include <fast_float.h>
@@ -50,40 +52,43 @@ void ObjHelpers::CacheFilePaths(ol::LoaderState& t_state) {
   //store base mesh at lod0
   t_state.lodPaths[0] = ol::File{.objPath = t_state.path, .mtlPath = mtlPath.string(), .lodLevel = 0};
 
-  for (auto& entry : std::filesystem::directory_iterator(dir)) {
-    // skip if it is not a normal file
-    if (!entry.is_regular_file()) {
-      continue;
-    }
+  if ((t_state.flags & ol::Flag::Lods) == ol::Flag::Lods) {
+    // find lods
+    for (auto& entry : std::filesystem::directory_iterator(dir)) {
+      // skip if it is not a normal file
+      if (!entry.is_regular_file()) {
+        continue;
+      }
 
-    const auto entryExtension = entry.path().extension(); // ".obj" or ".mtl"
-    const auto entryFileName  = entry.path().stem();      // filename without extension
+      const auto entryExtension = entry.path().extension(); // ".obj" or ".mtl"
+      const auto entryFileName  = entry.path().stem();      // filename without extension
 
-    // Look for "_lod" substring inside filename (e.g., "rock_lod1")
-    const auto pos = entryFileName.string().find(fileName.string() + "_lod");
-    if (pos == std::string::npos) {
-      continue; // skip non-lod files
-    }
+      // Look for "_lod" substring inside filename (e.g., "rock_lod1")
+      const auto pos = entryFileName.string().find(fileName.string() + "_lod");
+      if (pos == std::string::npos) {
+        continue; // skip non-lod files
+      }
 
-    // Extract numeric part after "_lod"
-    std::string lodNumStr = entryFileName.string().substr(pos + fileName.string().length() + 4);
-    int         lodIndex;
-    try {
-      lodIndex = std::stoi(lodNumStr);
-    }
-    catch (...) {
-      continue; // invalid suffix, skip file
-    }
+      // Extract numeric part after "_lod"
+      std::string lodNumStr = entryFileName.string().substr(pos + fileName.string().length() + 4);
+      int         lodIndex;
+      try {
+        lodIndex = std::stoi(lodNumStr);
+      }
+      catch (...) {
+        continue; // invalid suffix, skip file
+      }
 
-    // Get reference to lod entry in map (created if not exists)
-    t_state.lodPaths[lodIndex].lodLevel = lodIndex;
+      // Get reference to lod entry in map (created if not exists)
+      t_state.lodPaths[lodIndex].lodLevel = lodIndex;
 
-    // Assign paths depending on file type
-    if (entryExtension == ".obj") {
-      t_state.lodPaths[lodIndex].objPath = entry.path().string();
-    }
-    else if (entryExtension == ".mtl") {
-      t_state.lodPaths[lodIndex].mtlPath = entry.path().string();
+      // Assign paths depending on file type
+      if (entryExtension == ".obj") {
+        t_state.lodPaths[lodIndex].objPath = entry.path().string();
+      }
+      else if (entryExtension == ".mtl") {
+        t_state.lodPaths[lodIndex].mtlPath = entry.path().string();
+      }
     }
   }
 }

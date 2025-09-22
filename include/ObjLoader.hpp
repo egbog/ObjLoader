@@ -10,7 +10,26 @@
 
 namespace ol
 {
-  enum class Flag : uint8_t;
+  struct LoaderState;
+
+  enum class Flag : uint8_t
+  {
+    None              = 0,
+    Triangulate       = 1 << 0,
+    CalculateTangents = 1 << 1,
+    JoinIdentical     = 1 << 2,
+    CombineMeshes     = 1 << 3,
+    Lods              = 1 << 4
+  };
+
+  // Enable bitwise operations for the enum
+  constexpr Flag operator|(Flag t_a, Flag t_b) {
+    return static_cast<Flag>(static_cast<uint8_t>(t_a) | static_cast<uint8_t>(t_b));
+  }
+
+  constexpr Flag operator&(Flag t_a, Flag t_b) {
+    return static_cast<Flag>(static_cast<uint8_t>(t_a) & static_cast<uint8_t>(t_b));
+  }
 }
 
 class Logger;
