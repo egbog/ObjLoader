@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
+#include <glm/common.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace ol
 {
@@ -24,25 +26,38 @@ namespace ol
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 texCoords;
-    glm::vec3 tangent;
-    glm::vec3 biTangent;
+    glm::vec4 tangent;
 
-    // == operator override for calculateTriangle
-    constexpr bool operator==(const Vertex& t_other) const {
-      return position == t_other.position && normal == t_other.normal && texCoords == t_other.texCoords;
+    [[nodiscard]] static bool VecEqual(const glm::vec3& t_x, const glm::vec3& t_y) {
+      return glm::all(glm::lessThan(glm::abs(t_x - t_y), glm::vec3(1e-6f)));
     }
 
-    constexpr bool operator!=(const Vertex& t_other) const {
+    [[nodiscard]] static bool Vec2Equal(const glm::vec2& t_x, const glm::vec2& t_y) {
+      return glm::all(glm::lessThan(glm::abs(t_x - t_y), glm::vec2(1e-6f)));
+    }
+
+    // == operator override for calculateTriangle
+    bool operator==(const Vertex& t_other) const {
+      return VecEqual(position, t_other.position) && VecEqual(normal, t_other.normal) && Vec2Equal(texCoords, t_other.texCoords)
+        && VecEqual(tangent, t_other.tangent) && std::abs(tangent.w - t_other.tangent.w) < 1e-6f;
+    }
+
+    bool operator!=(const Vertex& t_other) const {
       return !(*this == t_other);
     }
 
-    [[nodiscard]] constexpr auto AsArray() const noexcept {
-      return std::array{position.x, position.y, position.z, normal.x, normal.y, normal.z, texCoords.x, texCoords.y};
+    [[nodiscard]] static int Quantize(const float t_v, const float t_scale = 100000) {
+      return static_cast<int>(std::round(t_v * t_scale));
     }
 
+    [[nodiscard]] auto AsArrayQuantized() const noexcept {
+      return std::array{Quantize(position.x), Quantize(position.y), Quantize(position.z), Quantize(normal.x), Quantize(normal.y),
+                        Quantize(normal.z), Quantize(texCoords.x), Quantize(texCoords.y), Quantize(tangent.x),
+                        Quantize(tangent.y), Quantize(tangent.z), Quantize(tangent.w)};
+    }
 
     constexpr bool operator<(const Vertex& t_other) const noexcept {
-      return AsArray() < t_other.AsArray();
+      return AsArrayQuantized() < t_other.AsArrayQuantized();
     }
   };
 
@@ -52,8 +67,7 @@ namespace ol
     // Constructors/operators
     Mesh() = default;
 
-    Mesh(const std::vector<Vertex>& t_vertices, Indices t_indices) : vertices(t_vertices),
-                                                                     indices(std::move(t_indices)) {}
+    Mesh(const std::vector<Vertex>& t_vertices, Indices t_indices) : vertices(t_vertices), indices(std::move(t_indices)) {}
 
     ~Mesh()                              = default;
     Mesh(const Mesh& t_other)            = default;
@@ -86,12 +100,10 @@ namespace ol
     //-------------------------------------------------------------------------------------------------------------------
     // Constructors/operators
     explicit Model(std::map<unsigned int, std::vector<Mesh>>& t_meshes,
-                   std::vector<Mesh>&                         t_combinedMeshes,
-                   std::vector<Material>&                     t_materials,
-                   std::string&                               t_path) : meshes(std::move(t_meshes)),
-                                                                        combinedMeshes(std::move(t_combinedMeshes)),
-                                                                        materials(std::move(t_materials)),
-                                                                        path(std::move(t_path)) {}
+                   std::vector<Mesh>& t_combinedMeshes,
+                   std::map<unsigned int, std::vector<Material>>& t_materials,
+                   std::string& t_path) : meshes(std::move(t_meshes)), materials(std::move(t_materials)),
+                                          combinedMeshes(std::move(t_combinedMeshes)), path(std::move(t_path)) {}
 
     ~Model()                           = default;
     Model(const Model&)                = delete;
@@ -100,9 +112,9 @@ namespace ol
     Model& operator=(Model&&) noexcept = default;
     //-------------------------------------------------------------------------------------------------------------------
 
-    std::map<unsigned int, std::vector<Mesh>> meshes;
-    std::vector<Mesh>                         combinedMeshes;
-    std::vector<Material>                     materials;
-    std::string                               path;
+    std::map<unsigned int, std::vector<Mesh>>     meshes;
+    std::map<unsigned int, std::vector<Material>> materials;
+    std::vector<Mesh>                             combinedMeshes;
+    std::string                                   path;
   };
 }

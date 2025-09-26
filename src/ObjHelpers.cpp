@@ -403,7 +403,7 @@ std::vector<ol::Mesh>& ObjHelpers::GetMeshContainer(ol::LoaderState& t_state, co
 std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const ol::Vertex& t_v1,
                                                              const ol::Vertex& t_v2,
                                                              const ol::Vertex& t_v3) {
-  glm::vec3 tangent1;
+  glm::vec3 tangent;
   // flat-shaded tangent
   const glm::vec3 normal = glm::normalize(t_v1.normal);
 
@@ -414,15 +414,14 @@ std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const ol::Vertex& t
   const glm::vec2 deltaUv2 = t_v3.texCoords - t_v1.texCoords;
 
   const float f = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv2.x * deltaUv1.y);
-  tangent1.x    = f * (deltaUv2.y * edge1.x - deltaUv1.y * edge2.x);
-  tangent1.y    = f * (deltaUv2.y * edge1.y - deltaUv1.y * edge2.y);
-  tangent1.z    = f * (deltaUv2.y * edge1.z - deltaUv1.y * edge2.z);
+  tangent.x    = f * (deltaUv2.y * edge1.x - deltaUv1.y * edge2.x);
+  tangent.y    = f * (deltaUv2.y * edge1.y - deltaUv1.y * edge2.y);
+  tangent.z    = f * (deltaUv2.y * edge1.z - deltaUv1.y * edge2.z);
 
   // We should be storing the tangent on all three vertices of the face
-  tangent1             = normalize(tangent1);
-  glm::vec3 bitangent1 = cross(normal, tangent1);
+  glm::vec3 bitangent = cross(normal, tangent);
 
-  return {tangent1, bitangent1};
+  return {tangent, bitangent};
 }
 
 /*!
@@ -450,6 +449,8 @@ void ObjHelpers::Triangulate(ol::LoaderState& t_state, std::vector<ol::Mesh>& t_
  */
 void ObjHelpers::CalcTangentSpace(std::vector<ol::Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
+    std::vector<glm::vec3> bitangents(mesh.vertices.size(), glm::vec3(0.0f));
+
     for (size_t i = 0; i < mesh.indices.size(); i += 3) {
       ol::Vertex& v0 = mesh.vertices[mesh.indices[i]];
       ol::Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
@@ -457,23 +458,24 @@ void ObjHelpers::CalcTangentSpace(std::vector<ol::Mesh>& t_meshes) {
 
       const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
 
-      v0.tangent += tangent;
-      v0.biTangent += bitangent;
-      v1.tangent += tangent;
-      v1.biTangent += bitangent;
-      v2.tangent += tangent;
-      v2.biTangent += bitangent;
+      v0.tangent += glm::vec4(tangent, 0.0f);
+      bitangents[i] += bitangent;
+      v1.tangent += glm::vec4(tangent, 0.0f);
+      bitangents[i + 1] += bitangent;
+      v2.tangent += glm::vec4(tangent, 0.0f);
+      bitangents[i + 2] += bitangent;
     }
 
-    // normalize at the end
-    for (auto& v : mesh.vertices) {
-      if (glm::length(v.tangent) > 1e-6f) {
-        v.tangent = glm::normalize(v.tangent);
-      }
+    for (size_t i = 0; i < mesh.vertices.size(); ++i) {
+      auto& v = mesh.vertices[i];
 
-      if (glm::length(v.biTangent) > 1e-6f) {
-        v.biTangent = glm::normalize(v.biTangent);
-      }
+      // Gram-Schmidt orthogonalize
+      glm::vec3 t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
+
+      // Handedness from unnormalized bitangent
+      const float handedness = (glm::dot(glm::cross(v.normal, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
+
+      v.tangent = glm::vec4(t, handedness);
     }
   }
 }
