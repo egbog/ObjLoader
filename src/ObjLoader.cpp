@@ -114,7 +114,7 @@ ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                          
 
     t_state.tempMeshes.clear();
     ObjHelpers::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
-    ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel));
+    ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
 
     if ((t_state.flags & ol::Flag::Triangulate) == ol::Flag::Triangulate) {
       ObjHelpers::Triangulate(t_state, meshes);

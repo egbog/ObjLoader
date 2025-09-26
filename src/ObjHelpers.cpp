@@ -290,7 +290,7 @@ const char* ObjHelpers::ParseFloat(const char* t_ptr, const char* t_end, float& 
  * @param t_state Internal state data to store texture info
  * @param t_buffer String buffer of current file
  */
-void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer) {
+void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer, const unsigned int& t_lodLevel) {
   // --- First pass: estimate number of materials ---
   size_t      materialCount = 0;
   const char* ptr           = t_buffer.data();
@@ -321,7 +321,7 @@ void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer)
   }
 
   // pre-allocate vector
-  t_state.materials.reserve(t_state.materials.size() + materialCount);
+  t_state.materials[t_lodLevel].reserve(t_state.materials.size() + materialCount);
 
   // --- Second pass: actual parsing ---
   ptr          = t_buffer.data();
@@ -359,18 +359,18 @@ void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer)
     std::string_view value(valueStart, ptr - valueStart);
 
     if (prefix == "newmtl") {
-      t_state.materials.emplace_back(std::string(value));
+      t_state.materials[t_lodLevel].emplace_back(std::string(value));
       mtlCount = static_cast<int>(t_state.materials.size() - 1);
     }
     else if (mtlCount >= 0) {
       if (prefix == "map_Kd") {
-        t_state.materials[mtlCount].diffuseName.emplace_back(value);
+        t_state.materials[t_lodLevel][mtlCount].diffuseName.emplace_back(value);
       }
       else if (prefix == "map_Ks" || prefix == "map_Ns") {
-        t_state.materials[mtlCount].specularName.emplace_back(value);
+        t_state.materials[t_lodLevel][mtlCount].specularName.emplace_back(value);
       }
       else if (prefix == "map_Bump") {
-        t_state.materials[mtlCount].normalName.emplace_back(value);
+        t_state.materials[t_lodLevel][mtlCount].normalName.emplace_back(value);
       }
     }
 
