@@ -360,7 +360,7 @@ void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer,
 
     if (prefix == "newmtl") {
       t_state.materials[t_lodLevel].emplace_back(std::string(value));
-      mtlCount = static_cast<int>(t_state.materials.size() - 1);
+      mtlCount = static_cast<int>(t_state.materials[t_lodLevel].size() - 1);
     }
     else if (mtlCount >= 0) {
       if (prefix == "map_Kd") {
