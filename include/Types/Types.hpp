@@ -19,6 +19,7 @@ namespace ol
     std::vector<std::string> diffuseName;
     std::vector<std::string> specularName;
     std::vector<std::string> normalName;
+    std::vector<std::string> heightName;
   };
 
   struct Vertex

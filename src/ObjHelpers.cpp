@@ -369,8 +369,10 @@ void ObjHelpers::ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer,
       else if (prefix == "map_Ks" || prefix == "map_Ns") {
         t_state.materials[t_lodLevel][mtlCount].specularName.emplace_back(value);
       }
-      else if (prefix == "map_Bump") {
+      else if (prefix == "map_Bump" || prefix == "bump") {
         t_state.materials[t_lodLevel][mtlCount].normalName.emplace_back(value);
+      } else if (prefix == "disp") {
+        t_state.materials[t_lodLevel][mtlCount].heightName.emplace_back(value);
       }
     }
 
