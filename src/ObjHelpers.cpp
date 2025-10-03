@@ -405,7 +405,6 @@ std::vector<ol::Mesh>& ObjHelpers::GetMeshContainer(ol::LoaderState& t_state, co
 std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const ol::Vertex& t_v1,
                                                              const ol::Vertex& t_v2,
                                                              const ol::Vertex& t_v3) {
-  glm::vec3 tangent;
   // flat-shaded tangent
   const glm::vec3 normal = glm::normalize(t_v1.normal);
 
@@ -415,13 +414,12 @@ std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const ol::Vertex& t
   const glm::vec2 deltaUv1 = t_v2.texCoords - t_v1.texCoords;
   const glm::vec2 deltaUv2 = t_v3.texCoords - t_v1.texCoords;
 
-  const float f = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv2.x * deltaUv1.y);
-  tangent.x    = f * (deltaUv2.y * edge1.x - deltaUv1.y * edge2.x);
-  tangent.y    = f * (deltaUv2.y * edge1.y - deltaUv1.y * edge2.y);
-  tangent.z    = f * (deltaUv2.y * edge1.z - deltaUv1.y * edge2.z);
+  const float f         = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv2.x * deltaUv1.y);
+
+  glm::vec3   tangent   = f * (edge1 * deltaUv2.y - edge2 * deltaUv1.y);
+  glm::vec3   bitangent = f * (edge2 * deltaUv1.x - edge1 * deltaUv2.x);
 
   // We should be storing the tangent on all three vertices of the face
-  glm::vec3 bitangent = cross(normal, tangent);
 
   return {tangent, bitangent};
 }
@@ -451,8 +449,9 @@ void ObjHelpers::Triangulate(ol::LoaderState& t_state, std::vector<ol::Mesh>& t_
  */
 void ObjHelpers::CalcTangentSpace(std::vector<ol::Mesh>& t_meshes) {
   for (auto& mesh : t_meshes) {
-    std::vector<glm::vec3> bitangents(mesh.vertices.size(), glm::vec3(0.0f));
+    std::vector bitangents(mesh.vertices.size(), glm::vec3(0.0f));
 
+    // accumulate
     for (size_t i = 0; i < mesh.indices.size(); i += 3) {
       ol::Vertex& v0 = mesh.vertices[mesh.indices[i]];
       ol::Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
