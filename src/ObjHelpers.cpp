@@ -223,7 +223,7 @@ void ObjHelpers::ParseObj(ol::LoaderState&       t_state,
 
       ptr = ParseFloat(ptr, ptrEnd, x);
       ptr = ParseFloat(ptr, ptrEnd, y);
-      t_state.tempMeshes[meshCount].texCoords.emplace_back(x, y);
+      t_state.tempMeshes[meshCount].texCoords.emplace_back(x, 1.0 - y);
     }
     else if (line.starts_with("vn")) {
       const char* ptr    = line.data() + 2;
