@@ -23,9 +23,15 @@ ThreadPool::ThreadPool(const size_t t_threadCount, Logger* t_logger) : m_maxThre
   for (size_t i = 0; i < m_maxPreSpawnThread; ++i) {
     AddThread([this] { WorkerLoop(); });
   }
+
+  m_poolActive = true;
 }
 
 ThreadPool::~ThreadPool() {
+  if (!m_poolActive) {
+    return;
+  }
+
   {
     std::lock_guard lock(m_mutex);
     m_shutdown = true;
@@ -36,6 +42,7 @@ ThreadPool::~ThreadPool() {
     "Thread Pool closed after processing {} tasks.",
     static_cast<unsigned int>(m_totalTasks));
   m_logger->LogInfo(msg);
+  m_poolActive = false;
 }
 
 void ThreadPool::WorkerLoop() {
