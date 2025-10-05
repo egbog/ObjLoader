@@ -20,22 +20,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\Logger\Logger.cpp" />
-    <ClCompile Include="src\ObjHelpers.cpp" />
-    <ClCompile Include="src\ObjLoader.cpp" />
-    <ClCompile Include="src\ThreadPool\ThreadPool.cpp" />
+    <ClCompile Include="obj\src\ObjHelpers.cpp" />
+    <ClCompile Include="obj\src\ObjLoader.cpp" />
+    <ClCompile Include="pool\src\Logger.cpp" />
+    <ClCompile Include="pool\src\ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Logger\Logger.hpp" />
-    <ClInclude Include="include\ObjHelpers.hpp" />
-    <ClInclude Include="include\ObjLoader.hpp" />
-    <ClInclude Include="include\ThreadPool\ThreadPool.hpp" />
-    <ClInclude Include="include\Time\Timer.hpp" />
-    <ClInclude Include="include\Types\Types.hpp" />
+    <ClInclude Include="obj\include\ObjHelpers.hpp" />
+    <ClInclude Include="obj\include\ObjLoader.hpp" />
+    <ClInclude Include="obj\include\Types\Types.hpp" />
+    <ClInclude Include="pool\include\Logger\Logger.hpp" />
+    <ClInclude Include="pool\include\ThreadPool.hpp" />
+    <ClInclude Include="pool\include\Time\Timer.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\ThreadPool\ThreadPool.inl" />
-    <None Include="include\Time\Timer.inl" />
+    <None Include="pool\include\ThreadPool.inl" />
+    <None Include="pool\include\Time\Timer.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -65,7 +65,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -90,10 +90,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\Users\Ryan\GitHub\ObjLoader;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\obj\include;$(SolutionDir)\pool\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\Users\Ryan\GitHub\ObjLoader;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\obj\include;$(SolutionDir)\pool\include</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -137,7 +137,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\Ryan\GitHub\ObjLoader\include;C:\Users\Ryan\GitHub\ObjLoader\external;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\obj\external;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,7 +156,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\Ryan\GitHub\ObjLoader\include;C:\Users\Ryan\GitHub\ObjLoader\external;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\obj\external;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
