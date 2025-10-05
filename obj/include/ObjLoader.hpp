@@ -1,7 +1,7 @@
 #pragma once
 #include "Logger/Logger.hpp"
 
-#include "ThreadPool/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 
 #include "Types/Types.hpp"
 

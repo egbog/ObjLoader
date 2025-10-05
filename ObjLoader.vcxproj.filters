@@ -15,47 +15,59 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ObjLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ObjHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Logger\Logger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ThreadPool\ThreadPool.cpp">
+    <ClCompile Include="obj\external\pool\ThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj\external\pool\Logger\Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pool\src\Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pool\src\ThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj\src\ObjLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="obj\src\ObjHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ObjLoader.hpp">
+    <ClInclude Include="obj\include\ObjLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Time\Timer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\ObjHelpers.hpp">
+    <ClInclude Include="obj\include\ObjHelpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Logger\Logger.hpp">
+    <ClInclude Include="pool\include\Logger\Logger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Types\Types.hpp">
+    <ClInclude Include="pool\include\Time\Timer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\ThreadPool\ThreadPool.hpp">
+    <ClInclude Include="pool\include\ThreadPool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj\include\Types\Types.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\ThreadPool\ThreadPool.inl">
+    <None Include="include\Time\Timer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="include\Time\Timer.inl">
+    <None Include="pool\include\Time\Timer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="pool\include\ThreadPool.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

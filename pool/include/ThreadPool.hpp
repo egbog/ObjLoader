@@ -72,4 +72,4 @@ private:
   Logger*                    m_logger;
 };
 
-#include "ThreadPool/ThreadPool.inl"
+#include "ThreadPool.inl"

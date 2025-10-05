@@ -1,6 +1,7 @@
 .vs/
 x64/
 ObjLoader/x64
+build/
 
 # Prerequisites
 *.d

@@ -1,4 +1,4 @@
-#include "ThreadPool/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 
 #include "Logger/Logger.hpp"
 
