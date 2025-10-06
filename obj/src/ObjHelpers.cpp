@@ -406,8 +406,6 @@ std::pair<glm::vec3, glm::vec3> ObjHelpers::GetTangentCoords(const ol::Vertex& t
                                                              const ol::Vertex& t_v2,
                                                              const ol::Vertex& t_v3) {
   // flat-shaded tangent
-  const glm::vec3 normal = glm::normalize(t_v1.normal);
-
   //clockwise
   const glm::vec3 edge1    = t_v2.position - t_v1.position;
   const glm::vec3 edge2    = t_v3.position - t_v1.position;
