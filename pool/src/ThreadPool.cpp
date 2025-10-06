@@ -1,6 +1,6 @@
-#include "ThreadPool.hpp"
+#include "pool/ThreadPool.hpp"
 
-#include "Logger/Logger.hpp"
+#include "pool/Logger/Logger.hpp"
 
 ThreadPool::ThreadPool(const size_t t_threadCount, Logger* t_logger) : m_maxThreadsUser(t_threadCount),
                                                                        m_logger(t_logger) {

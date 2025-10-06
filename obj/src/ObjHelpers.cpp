@@ -1,8 +1,8 @@
-#include "ObjHelpers.hpp"
+#include "obj/ObjHelpers.hpp"
 
-#include "ObjLoader.hpp"
+#include "obj/ObjLoader.hpp"
 
-#include "Types/Types.hpp"
+#include "obj/Types/Types.hpp"
 
 #include <fast_float.h>
 #include <filesystem>
@@ -17,10 +17,10 @@
  * @param t_path Path to file including file extension
  * @return String buffer
  */
-std::string ObjHelpers::ReadFileToBuffer(const std::string& t_path) {
+std::string ObjHelpers::ReadFileToBuffer(const std::filesystem::path& t_path) {
   std::ifstream in(t_path, std::ios::binary | std::ios::ate);
   if (!in.is_open()) {
-    throw std::runtime_error("Failed to open file: " + t_path);
+    throw std::runtime_error("Failed to open file: " + t_path.string());
   }
 
   const auto  size = in.tellg();

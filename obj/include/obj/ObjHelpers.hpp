@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <map>
 #include <string>
 #include <vector>
@@ -26,17 +27,17 @@ namespace ol
 
   struct File
   {
-    std::string  objPath;
-    std::string  mtlPath;
+    std::filesystem::path  objPath;
+    std::filesystem::path  mtlPath;
     unsigned int lodLevel = 0;
   };
 
   struct LoaderState
   {
-    explicit    LoaderState(const Flag t_flags) : flags(t_flags) {}
-    std::string path;
-    std::string mtlFileName;
-    Flag        flags;
+    explicit              LoaderState(const Flag t_flags) : flags(t_flags) {}
+    std::filesystem::path path;
+    std::string           mtlFileName;
+    Flag                  flags;
 
     std::vector<File>                             filePaths;
     std::map<unsigned int, std::vector<Mesh>>     meshes; // final calculated meshes
@@ -49,7 +50,7 @@ namespace ol
 class ObjHelpers
 {
 public:
-  static std::string ReadFileToBuffer(const std::string& t_path);
+  static std::string ReadFileToBuffer(const std::filesystem::path& t_path);
   static void CacheFilePaths(ol::LoaderState& t_state);
   static void ParseObj(ol::LoaderState& t_state,
                        std::vector<ol::Mesh>& t_meshes,

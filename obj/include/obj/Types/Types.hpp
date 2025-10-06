@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <filesystem>
 #include <map>
 #include <string>
 #include <vector>
@@ -103,7 +104,7 @@ namespace ol
     explicit Model(std::map<unsigned int, std::vector<Mesh>>& t_meshes,
                    std::vector<Mesh>& t_combinedMeshes,
                    std::map<unsigned int, std::vector<Material>>& t_materials,
-                   std::string& t_path) : meshes(std::move(t_meshes)), materials(std::move(t_materials)),
+                   std::filesystem::path t_path) : meshes(std::move(t_meshes)), materials(std::move(t_materials)),
                                           combinedMeshes(std::move(t_combinedMeshes)), path(std::move(t_path)) {}
 
     ~Model()                           = default;
@@ -116,6 +117,6 @@ namespace ol
     std::map<unsigned int, std::vector<Mesh>>     meshes;
     std::map<unsigned int, std::vector<Material>> materials;
     std::vector<Mesh>                             combinedMeshes;
-    std::string                                   path;
+    std::filesystem::path                         path;
   };
 }

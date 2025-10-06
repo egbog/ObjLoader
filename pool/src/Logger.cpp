@@ -1,6 +1,6 @@
-#include "Logger/Logger.hpp"
+#include "pool/Logger/Logger.hpp"
 
-#include "ThreadPool.hpp"
+#include "pool/ThreadPool.hpp"
 
 #include <format>
 #include <iostream>

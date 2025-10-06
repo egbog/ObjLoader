@@ -1,8 +1,8 @@
-#include "ObjLoader.hpp"
+#include "obj/ObjLoader.hpp"
 
-#include "ObjHelpers.hpp"
+#include "obj/ObjHelpers.hpp"
 
-#include "Types/Types.hpp"
+#include "obj/Types/Types.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -25,7 +25,7 @@ ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads)
  * @param t_flags 
  * @return std::future<Model> of the created task that loads the file
  */
-std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path, ol::Flag t_flags) {
+std::future<ol::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, ol::Flag t_flags) {
   const Timer     cacheTimer;
   ol::LoaderState state(t_flags);
 
@@ -42,7 +42,7 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::string& t_path, ol::Flag t
     objBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(objPath);
 
     if (mtlPath.empty()) {
-      m_logger.LogWarning(std::format("No mtl found for file: {}", objPath));
+      m_logger.LogWarning(std::format("No mtl found for file: {}", objPath.string()));
     }
 
     mtlBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(mtlPath);
@@ -74,7 +74,7 @@ ol::Model ObjLoader::ConstructTask(const ol::LoaderState&                       
 
   try {
     const Timer processTime;
-    log = std::format("Started loading task #{} - {} on thread: {}", t_taskNumber, t_state.path, id.str());
+    log = std::format("Started loading task #{} - {} on thread: {}", t_taskNumber, t_state.path.string(), id.str());
     m_logger.LogInfo(log);
 
     // since lambda is immutable, and we have to std::move the state,

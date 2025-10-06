@@ -26,16 +26,16 @@
     <ClCompile Include="pool\src\ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="obj\include\ObjHelpers.hpp" />
-    <ClInclude Include="obj\include\ObjLoader.hpp" />
-    <ClInclude Include="obj\include\Types\Types.hpp" />
-    <ClInclude Include="pool\include\Logger\Logger.hpp" />
-    <ClInclude Include="pool\include\ThreadPool.hpp" />
-    <ClInclude Include="pool\include\Time\Timer.hpp" />
+    <ClInclude Include="obj\include\obj\ObjHelpers.hpp" />
+    <ClInclude Include="obj\include\obj\ObjLoader.hpp" />
+    <ClInclude Include="obj\include\obj\Types\Types.hpp" />
+    <ClInclude Include="pool\include\pool\Logger\Logger.hpp" />
+    <ClInclude Include="pool\include\pool\ThreadPool.hpp" />
+    <ClInclude Include="pool\include\pool\Time\Timer.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="pool\include\ThreadPool.inl" />
-    <None Include="pool\include\Time\Timer.inl" />
+    <None Include="pool\include\pool\ThreadPool.inl" />
+    <None Include="pool\include\pool\Time\Timer.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

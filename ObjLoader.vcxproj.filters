@@ -18,12 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="obj\external\pool\ThreadPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="obj\external\pool\Logger\Logger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pool\src\Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -38,36 +32,30 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="obj\include\ObjLoader.hpp">
+    <ClInclude Include="obj\include\obj\ObjLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Time\Timer.hpp">
+    <ClInclude Include="obj\include\obj\ObjHelpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="obj\include\ObjHelpers.hpp">
+    <ClInclude Include="pool\include\pool\Logger\Logger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pool\include\Logger\Logger.hpp">
+    <ClInclude Include="pool\include\pool\Time\Timer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pool\include\Time\Timer.hpp">
+    <ClInclude Include="pool\include\pool\ThreadPool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pool\include\ThreadPool.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="obj\include\Types\Types.hpp">
+    <ClInclude Include="obj\include\obj\Types\Types.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\Time\Timer.inl">
+    <None Include="pool\include\pool\Time\Timer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="pool\include\Time\Timer.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="pool\include\ThreadPool.inl">
+    <None Include="pool\include\pool\ThreadPool.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

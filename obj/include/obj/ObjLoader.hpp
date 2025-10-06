@@ -1,10 +1,11 @@
 #pragma once
-#include "Logger/Logger.hpp"
+#include "pool/Logger/Logger.hpp"
 
-#include "ThreadPool.hpp"
+#include "pool/ThreadPool.hpp"
 
 #include "Types/Types.hpp"
 
+#include <filesystem>
 #include <future>
 #include <string>
 
@@ -47,7 +48,7 @@ public:
   ObjLoader(ObjLoader&& t_other)            = delete;
   //-------------------------------------------------------------------------------------------------------------------
 
-  std::future<ol::Model> LoadFile(const std::string& t_path, ol::Flag t_flags = ol::Flag::Triangulate);
+  std::future<ol::Model> LoadFile(const std::filesystem::path& t_path, ol::Flag t_flags = ol::Flag::Triangulate);
 
   [[nodiscard]] constexpr size_t WorkerCount() const { return m_threadPool.ThreadCount(); }
 
