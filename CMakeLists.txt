@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "Do not install GLM from CMake")
 set(GLM_ENABLE_CXX_20 ON CACHE BOOL "Force C++ 20 support for GLM")
