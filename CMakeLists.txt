@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 set(GLM_BUILD_INSTALL OFF CACHE BOOL "Do not install GLM from CMake")
 set(GLM_ENABLE_CXX_20 ON CACHE BOOL "Force C++ 20 support for GLM")
-set(FASTFLOAT_CXX_STANDARD 20 CACHE STRING "Force C++ 20 support for fast float")
+set(FASTFLOAT_CXX_STANDARD 20 CACHE STRING "Force C++ 20 support for fast float" )
+set(FASTFLOAT_INSTALL OFF CACHE BOOL "Do not install fast float from CMake" FORCE)
 
 project(obj LANGUAGES CXX)
 
