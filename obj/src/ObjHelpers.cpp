@@ -4,7 +4,7 @@
 
 #include "obj/Types/Types.hpp"
 
-#include <fast_float.h>
+#include <fastfloat/fast_float.h>
 #include <filesystem>
 #include <fstream>
 #include <numeric>

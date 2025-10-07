@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 project(pool LANGUAGES CXX)
 
+# Source files
+file(GLOB_RECURSE POOL_SRC
+	"src/*.cpp"
+	"include/*.h"
+	"include/*.hpp"
+	"include/*.inl"
+)
+
 add_library(pool STATIC
-	src/Logger.cpp
-    src/ThreadPool.cpp
+	${POOL_SRC}
 )
 		
 # Add include directories
