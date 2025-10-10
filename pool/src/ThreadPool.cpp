@@ -2,6 +2,12 @@
 
 #include "pool/Logger/Logger.hpp"
 
+std::string ol::QueuedTask::ThreadIdString(const std::thread::id& t_id) {
+  std::ostringstream s;
+  s << t_id;
+  return s.str();
+}
+
 ThreadPool::ThreadPool(const size_t t_threadCount, Logger* t_logger) : m_maxThreadsUser(t_threadCount),
                                                                        m_logger(t_logger) {
   // if we are not able to get the amount of max concurrent threads

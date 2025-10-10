@@ -2,7 +2,6 @@
 #include "Time/Timer.hpp"
 
 #include <future>
-#include <iostream>
 #include <queue>
 
 // TODO: shutdown function?
@@ -18,11 +17,7 @@ namespace ol
     QueuedTask(std::packaged_task<void()> t_task, const unsigned int t_taskNumber) : task(std::move(t_task)), timer(Timer()),
                                                                                      taskNumber(t_taskNumber) {}
 
-    [[nodiscard]] static std::string ThreadIdString(const std::thread::id& t_id) {
-      std::ostringstream s;
-      s << t_id;
-      return s.str();
-    }
+    [[nodiscard]] static std::string ThreadIdString(const std::thread::id& t_id);
 
     std::packaged_task<void()> task;
     Timer                      timer;
