@@ -2,8 +2,6 @@
 
 #include "obj/ObjHelpers.hpp"
 
-#include "obj/Types/Types.hpp"
-
 #include <algorithm>
 #include <iostream>
 #include <ranges>
@@ -35,17 +33,17 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, 
   state.path = t_path;
 
   // get file paths of all obj, mtl and lods
-  ObjHelpers::CacheFilePaths(state);
+  CacheFilePaths(state);
 
   // read all files to memory on main thread
   for (const auto& [objPath, mtlPath, lodLevel] : state.filePaths) {
-    objBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(objPath);
+    objBuffers[lodLevel] = ol::ReadFileToBuffer(objPath);
 
     if (mtlPath.empty()) {
       m_logger.LogWarning(std::format("No mtl found for file: {}", objPath.string()));
     }
 
-    mtlBuffers[lodLevel] = ObjHelpers::ReadFileToBuffer(mtlPath);
+    mtlBuffers[lodLevel] = ol::ReadFileToBuffer(mtlPath);
   }
 
   // assign task number before creating task and pass by value
@@ -110,27 +108,27 @@ ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                          
                                       const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
   // Load obj
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.filePaths) {
-    std::vector<ol::Mesh>& meshes = ObjHelpers::GetMeshContainer(t_state, lodLevel);
+    std::vector<ol::Mesh>& meshes = ol::GetMeshContainer(t_state, lodLevel);
 
     t_state.tempMeshes.clear();
-    ObjHelpers::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
-    ObjHelpers::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
+    ol::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
+    ol::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
 
     if ((t_state.flags & ol::Flag::Triangulate) == ol::Flag::Triangulate) {
-      ObjHelpers::Triangulate(t_state, meshes);
+      ol::Triangulate(t_state, meshes);
     }
 
     if ((t_state.flags & ol::Flag::CalculateTangents) == ol::Flag::CalculateTangents) {
-      ObjHelpers::CalcTangentSpace(meshes);
+      ol::CalcTangentSpace(meshes);
     }
 
     if ((t_state.flags & ol::Flag::JoinIdentical) == ol::Flag::JoinIdentical) {
-      ObjHelpers::JoinIdenticalVertices(meshes);
+      ol::JoinIdenticalVertices(meshes);
     }
   }
 
   if ((t_state.flags & ol::Flag::CombineMeshes) == ol::Flag::CombineMeshes) {
-    ObjHelpers::CombineMeshes(t_state);
+    ol::CombineMeshes(t_state);
   }
 
   return ol::Model(t_state.meshes, t_state.combinedMeshes, t_state.materials, t_state.path);

@@ -1,8 +1,7 @@
 #pragma once
+
 #include <filesystem>
 #include <map>
-#include <string>
-#include <vector>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -27,9 +26,9 @@ namespace ol
 
   struct File
   {
-    std::filesystem::path  objPath;
-    std::filesystem::path  mtlPath;
-    unsigned int lodLevel = 0;
+    std::filesystem::path objPath;
+    std::filesystem::path mtlPath;
+    unsigned int          lodLevel = 0;
   };
 
   struct LoaderState
@@ -45,23 +44,16 @@ namespace ol
     std::map<unsigned int, std::vector<Material>> materials;  // final materials
     std::vector<TempMeshes>                       tempMeshes; // interim storage
   };
-}
 
-class ObjHelpers
-{
-public:
-  static std::string ReadFileToBuffer(const std::filesystem::path& t_path);
-  static void CacheFilePaths(ol::LoaderState& t_state);
-  static void ParseObj(ol::LoaderState& t_state,
-                       std::vector<ol::Mesh>& t_meshes,
-                       const std::string& t_buffer,
-                       unsigned int t_lodLevel = 0);
-  static const char* ParseFloat(const char* t_ptr, const char* t_end, float& t_out);
-  static void ParseMtl(ol::LoaderState& t_state, const std::string& t_buffer, const unsigned int& t_lodLevel);
-  static std::vector<ol::Mesh>& GetMeshContainer(ol::LoaderState& t_state, unsigned int t_lodLevel = 0);
-  static std::pair<glm::vec3, glm::vec3> GetTangentCoords(const ol::Vertex& t_v1, const ol::Vertex& t_v2, const ol::Vertex& t_v3);
-  static void Triangulate(ol::LoaderState& t_state, std::vector<ol::Mesh>& t_meshes);
-  static void CalcTangentSpace(std::vector<ol::Mesh>& t_meshes);
-  static void JoinIdenticalVertices(std::vector<ol::Mesh>& t_meshes);
-  static void CombineMeshes(ol::LoaderState& t_state);
-};
+  std::string ReadFileToBuffer(const std::filesystem::path& t_path);
+  void CacheFilePaths(LoaderState& t_state);
+  const char* ParseFloat(const char* t_ptr, const char* t_end, float& t_out);
+  void ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, const std::string& t_buffer, unsigned int t_lodLevel = 0);
+  void ParseMtl(LoaderState& t_state, const std::string& t_buffer, const unsigned int& t_lodLevel);
+  std::vector<Mesh>& GetMeshContainer(LoaderState& t_state, unsigned int t_lodLevel = 0);
+  std::pair<glm::vec3, glm::vec3> GetTangentCoords(const Vertex& t_v1, const Vertex& t_v2, const Vertex& t_v3);
+  void Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes);
+  void CalcTangentSpace(std::vector<Mesh>& t_meshes);
+  void JoinIdenticalVertices(std::vector<Mesh>& t_meshes);
+  void CombineMeshes(LoaderState& t_state);
+}
