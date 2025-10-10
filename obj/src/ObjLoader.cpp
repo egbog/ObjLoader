@@ -2,10 +2,6 @@
 
 #include "obj/ObjHelpers.hpp"
 
-#include <algorithm>
-#include <iostream>
-#include <ranges>
-
 /*!
  * @brief Initializes the instance and dispatches an appropriate number of threads pre-emptively, ready to pick up tasks
  * @param t_maxThreads User desired maximum amount of threads to dispatch across the whole instance.
