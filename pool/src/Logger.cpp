@@ -22,6 +22,10 @@ void Logger::DispatchWorkerThread() {
   m_thread = std::jthread([this] { WorkerThread(); });
 }
 
+void Logger::LogDebug(const std::string& t_entry) {
+  ThreadSafeLogMessage(t_entry, ol::Debug);
+}
+
 void Logger::LogInfo(const std::string& t_entry) {
   ThreadSafeLogMessage(t_entry, ol::Info);
 }

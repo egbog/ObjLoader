@@ -8,6 +8,7 @@ namespace ol
   enum LogSeverity : uint8_t
   {
     None,
+    Debug,
     Info,
     Warning,
     Error,
@@ -36,6 +37,7 @@ public:
 
   void SetSource(const std::string& t_source);
   void DispatchWorkerThread();
+  void LogDebug(const std::string& t_entry);
   void LogInfo(const std::string& t_entry);
   void LogWarning(const std::string& t_entry);
   void LogError(const std::string& t_entry);
