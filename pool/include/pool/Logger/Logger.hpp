@@ -34,6 +34,7 @@ public:
   Logger(Logger&& t_other)            = delete;
   //-------------------------------------------------------------------------------------------------------------------
 
+  void SetSource(const std::string& t_source);
   void DispatchWorkerThread();
   void LogInfo(const std::string& t_entry);
   void LogWarning(const std::string& t_entry);

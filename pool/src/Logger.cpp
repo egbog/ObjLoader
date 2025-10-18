@@ -12,6 +12,9 @@ Logger::~Logger() {
   Shutdown();
 }
 
+void Logger::SetSource(const std::string& t_source) {
+  m_source = t_source;
+}
 /*!
  * @brief Creates a jthread in a private member of this instance
  */
