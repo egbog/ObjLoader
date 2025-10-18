@@ -23,7 +23,7 @@ std::future<std::invoke_result_t<F, Args...>> ThreadPool::Enqueue(F&& t_f, Args&
 
   // don't allow enqueueing after stopping the pool
   if (m_shutdown) {
-    m_logger->LogWarning("Prevented enqueue on stopped Thread Pool");
+    m_logger.LogWarning("Prevented enqueue on stopped Thread Pool");
     return fut;
   }
 

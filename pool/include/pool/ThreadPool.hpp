@@ -1,12 +1,12 @@
 #pragma once
 #include "Time/Timer.hpp"
 
+#include "pool/Logger/Logger.hpp"
+
 #include <future>
 #include <queue>
 
 // TODO: shutdown function?
-
-class Logger;
 
 namespace ol
 {
@@ -31,7 +31,7 @@ class ThreadPool
 public:
   //-------------------------------------------------------------------------------------------------------------------
   // Constructors/operators
-  explicit ThreadPool(size_t t_threadCount, Logger* t_logger);
+  explicit ThreadPool(size_t t_threadCount);
   ~ThreadPool();
   ThreadPool& operator=(ThreadPool& t_other)  = delete;
   ThreadPool& operator=(ThreadPool&& t_other) = delete;
@@ -64,7 +64,7 @@ private:
   bool                       m_shutdown          = false;
   bool                       m_poolActive        = false;
   std::atomic<unsigned int>  m_totalTasks        = 0;                                   // Global task counter
-  Logger*                    m_logger;
+  Logger                     m_logger;
 };
 
 #include "ThreadPool.inl"

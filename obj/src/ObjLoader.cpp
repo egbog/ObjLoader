@@ -8,8 +8,8 @@
  * \n A small portion of this will be pre-dispatched
  * \n Note if files are small enough, the amount of dispatched threads may not actually reach this limit
  */
-ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads), m_logger("ThreadPool"),
-                                                  m_threadPool(ThreadPool(m_maxThreadsUser, &m_logger)) {
+ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads), m_logger("ObjLoader"),
+                                                  m_threadPool(ThreadPool(m_maxThreadsUser)) {
   m_logger.DispatchWorkerThread();
 }
 
