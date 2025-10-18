@@ -15,6 +15,7 @@ Logger::~Logger() {
 void Logger::SetSource(const std::string& t_source) {
   m_source = t_source;
 }
+
 /*!
  * @brief Creates a jthread in a private member of this instance
  */
@@ -100,7 +101,15 @@ void Logger::ThreadSafeLogMessage(std::string t_entry, ol::LogSeverity t_severit
     std::lock_guard lock(m_waitLogMutex);
     m_logQueue.emplace(std::move(t_entry), t_severity);
   }
-  m_cv.notify_one();
+
+  // no thread dispatched, immediately flush to main thread
+  if (m_thread.joinable()) {
+    FlushQueue();
+  }
+  // notify thread
+  else {
+    m_cv.notify_one();
+  }
 }
 
 /*!
