@@ -54,6 +54,11 @@ void Logger::FlushQueue() {
   while (!local.empty()) {
     auto [message, severity] = local.front();
     switch (severity) {
+      case ol::Debug: {
+        SetConsoleTextAttribute(hConsole, 8);
+        message = std::format("[{}] - Debug: {}\n", m_source, message);
+        break;
+      }
       case ol::Info: {
         SetConsoleTextAttribute(hConsole, 7);
         message = std::format("[{}] - Info: {}\n", m_source, message);
