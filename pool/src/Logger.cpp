@@ -6,6 +6,8 @@
 #include <iostream>
 #include <windows.h>
 
+Logger::Logger(std::string t_source) : m_source(std::move(t_source)) {}
+
 Logger::~Logger() {
   Shutdown();
 }
@@ -47,22 +49,22 @@ void Logger::FlushQueue() {
     switch (severity) {
       case ol::Info: {
         SetConsoleTextAttribute(hConsole, 7);
-        message = std::format("[ThreadPool] - Info: {}\n", message);
+        message = std::format("[{}] - Info: {}\n", m_source, message);
         break;
       }
       case ol::Warning: {
         SetConsoleTextAttribute(hConsole, 6);
-        message = std::format("[ThreadPool] - Warning: {}\n", message);
+        message = std::format("[{}] - Warning: {}\n", m_source, message);
         break;
       }
       case ol::Error: {
         SetConsoleTextAttribute(hConsole, 4);
-        message = std::format("[ThreadPool] - Error: {}\n", message);
+        message = std::format("[{}] - Error: {}\n", m_source, message);
         break;
       }
       case ol::Success: {
         SetConsoleTextAttribute(hConsole, 2);
-        message = std::format("[ThreadPool] - Success: {}\n", message);
+        message = std::format("[{}] - Success: {}\n", m_source, message);
         break;
       }
       case ol::None: {

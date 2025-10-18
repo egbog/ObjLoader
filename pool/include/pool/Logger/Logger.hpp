@@ -26,7 +26,7 @@ class Logger
 public:
   //-------------------------------------------------------------------------------------------------------------------
   // Constructors/operators
-  Logger() = default;
+  explicit Logger(std::string t_source);
   ~Logger();
   Logger& operator=(Logger& t_other)  = delete;
   Logger& operator=(Logger&& t_other) = delete;
@@ -51,4 +51,5 @@ private:
   std::mutex               m_waitLogMutex; // Mutex for inserting and popping into the queue
   std::condition_variable  m_cv;           // Cv to wait thread
   bool                     m_shutdown = false;
+  std::string              m_source;
 };
