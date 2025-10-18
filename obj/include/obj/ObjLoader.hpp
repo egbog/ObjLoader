@@ -9,8 +9,6 @@ namespace ol
   enum class Flag : uint8_t;
   struct Model;
   struct LoaderState;
-
-
 }
 
 class Logger;
