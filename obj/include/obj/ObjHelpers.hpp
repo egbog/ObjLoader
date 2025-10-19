@@ -10,7 +10,7 @@
 #include <glm/vec4.hpp>
 
 
-namespace ol
+namespace obj
 {
   using Indices = std::vector<unsigned int>;
 

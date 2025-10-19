@@ -1,13 +1,13 @@
 #include "pool/ThreadPool.hpp"
 
 
-std::string ol::QueuedTask::ThreadIdString(const std::thread::id& t_id) {
+std::string obj::QueuedTask::ThreadIdString(const std::thread::id& t_id) {
   std::ostringstream s;
   s << t_id;
   return s.str();
 }
 
-ThreadPool::ThreadPool(const size_t t_threadCount) : m_maxThreadsUser(t_threadCount), m_logger("ThreadPool") {
+ThreadPool::ThreadPool(const size_t t_threadCount) : m_maxThreadsUser(t_threadCount) {
   // if we are not able to get the amount of max concurrent threads
   if (m_maxThreadsUser == 0 || m_maxThreadsHw == 0) {
     // only run on the main thread
@@ -43,14 +43,14 @@ ThreadPool::~ThreadPool() {
   m_cv.notify_all();
   // No need to manually join m_workers, jthreads will join automatically
   const std::string msg = std::format("Thread Pool closed after processing {} tasks.", static_cast<unsigned int>(m_totalTasks));
-  m_logger.LogDebug(msg);
+  m_logger->Log<Logger::Debug>(msg);
   m_poolActive = false;
 }
 
 void ThreadPool::WorkerLoop() {
   while (true) {
     // we made this std::optional to avoid the overhead of default constructing a QueuedTask
-    std::optional<ol::QueuedTask> optTask;
+    std::optional<obj::QueuedTask> optTask;
 
     {
       std::unique_lock lock(m_mutex);
@@ -80,24 +80,24 @@ void ThreadPool::WorkerLoop() {
         "Task #{} waited {:L} before starting on new thread: {}",
         optTask->taskNumber,
         waitTime,
-        ol::QueuedTask::ThreadIdString(optTask->threadId));
+        obj::QueuedTask::ThreadIdString(optTask->threadId));
     }
     else if (optTask->taskNumber > m_maxPreSpawnThread) {
       log = std::format(
         "Task #{} waited {:L} in queue before starting on thread: {}",
         optTask->taskNumber,
         waitTime,
-        ol::QueuedTask::ThreadIdString(optTask->threadId));
+        obj::QueuedTask::ThreadIdString(optTask->threadId));
     }
     else {
       log = std::format(
         "Task #{} assigned to already running thread: {}",
         optTask->taskNumber,
-        ol::QueuedTask::ThreadIdString(optTask->threadId));
+        obj::QueuedTask::ThreadIdString(optTask->threadId));
     }
 
     if (!log.empty()) {
-      m_logger.LogDebug(log);
+      m_logger->Log<Logger::Debug>(log);
     }
 
     optTask->task(); // run job

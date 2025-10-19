@@ -10,7 +10,7 @@
 
 #include <glm/geometric.hpp>
 
-namespace ol
+namespace obj
 {
   /*!
    * @brief Reads specified file path to a std::string buffer

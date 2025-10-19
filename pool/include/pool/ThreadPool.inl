@@ -1,5 +1,4 @@
 #pragma once
-#include "Logger/Logger.hpp"
 
 template <typename F>
 void ThreadPool::AddThread(F&& t_f) {
@@ -23,7 +22,7 @@ std::future<std::invoke_result_t<F, Args...>> ThreadPool::Enqueue(F&& t_f, Args&
 
   // don't allow enqueueing after stopping the pool
   if (m_shutdown) {
-    m_logger.LogWarning("Prevented enqueue on stopped Thread Pool");
+    m_logger->Log<Logger::Warning>("Prevented enqueue on stopped Thread Pool");
     return fut;
   }
 

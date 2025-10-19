@@ -1,10 +1,12 @@
 #pragma once
 
+#include <iostream>
 #include <mutex>
 #include <queue>
 
-namespace ol
+class Logger
 {
+public:
   enum LogSeverity : uint8_t
   {
     None,
@@ -17,17 +19,14 @@ namespace ol
 
   struct LogEntry
   {
+    LogEntry(std::string t_message, const LogSeverity t_severity) : message(std::move(t_message)), severity(t_severity) {}
     std::string message;
     LogSeverity severity;
   };
-}
 
-class Logger
-{
-public:
   //-------------------------------------------------------------------------------------------------------------------
   // Constructors/operators
-  explicit Logger(std::string t_source);
+  Logger() = default;
   ~Logger();
   Logger& operator=(Logger& t_other)  = delete;
   Logger& operator=(Logger&& t_other) = delete;
@@ -35,24 +34,28 @@ public:
   Logger(Logger&& t_other)            = delete;
   //-------------------------------------------------------------------------------------------------------------------
 
-  void SetSource(const std::string& t_source);
-  void DispatchWorkerThread();
-  void LogDebug(const std::string& t_entry);
-  void LogInfo(const std::string& t_entry);
-  void LogWarning(const std::string& t_entry);
-  void LogError(const std::string& t_entry);
-  void LogSuccess(const std::string& t_entry);
-  void FlushQueue();
+  static Logger& Instance() {
+    static Logger instance;
+    return instance;
+  }
 
-private:
-  void ThreadSafeLogMessage(std::string t_entry, ol::LogSeverity t_severity);
-  void WorkerThread();
+  void DispatchWorkerThread();
+
+  template <LogSeverity Severity>
+  void Log(const std::string& t_entry) {
+    ThreadSafeLogMessage(LogEntry(t_entry, Severity));
+  }
+
+  void FlushQueue();
   void Shutdown();
 
-  std::jthread             m_thread;       // Worker thread
-  std::queue<ol::LogEntry> m_logQueue;     // The message queue
-  std::mutex               m_waitLogMutex; // Mutex for inserting and popping into the queue
-  std::condition_variable  m_cv;           // Cv to wait thread
-  bool                     m_shutdown = false;
-  std::string              m_source;
+private:
+  void ThreadSafeLogMessage(LogEntry t_entry);
+  void WorkerThread();
+
+  std::jthread            m_thread;       // Worker thread
+  std::queue<LogEntry>    m_logQueue;     // The message queue
+  std::mutex              m_waitLogMutex; // Mutex for inserting and popping into the queue
+  std::condition_variable m_cv;           // Cv to wait thread
+  bool                    m_shutdown = false;
 };

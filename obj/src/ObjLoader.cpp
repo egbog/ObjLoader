@@ -8,9 +8,8 @@
  * \n A small portion of this will be pre-dispatched
  * \n Note if files are small enough, the amount of dispatched threads may not actually reach this limit
  */
-ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads), m_logger("ObjLoader"),
-                                                  m_threadPool(ThreadPool(m_maxThreadsUser)) {
-  m_logger.DispatchWorkerThread();
+ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads), m_threadPool(ThreadPool(m_maxThreadsUser)) {
+  //m_logger->DispatchWorkerThread();
 }
 
 /*!
@@ -19,9 +18,9 @@ ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads)
  * @param t_flags 
  * @return std::future<Model> of the created task that loads the file
  */
-std::future<ol::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, ol::Flag t_flags) {
-  const Timer     cacheTimer;
-  ol::LoaderState state(t_flags);
+std::future<obj::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, obj::Flag t_flags) {
+  const Timer      cacheTimer;
+  obj::LoaderState state(t_flags);
 
   std::unordered_map<unsigned int, std::string> mtlBuffers;
   std::unordered_map<unsigned int, std::string> objBuffers;
@@ -33,13 +32,13 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, 
 
   // read all files to memory on main thread
   for (const auto& [objPath, mtlPath, lodLevel] : state.filePaths) {
-    objBuffers[lodLevel] = ol::ReadFileToBuffer(objPath);
+    objBuffers[lodLevel] = obj::ReadFileToBuffer(objPath);
 
     if (mtlPath.empty()) {
-      m_logger.LogWarning(std::format("No mtl found for file: {}", objPath.string()));
+      m_logger->Log<Logger::Warning>(std::format("No mtl found for file: {}", objPath.string()));
     }
 
-    mtlBuffers[lodLevel] = ol::ReadFileToBuffer(mtlPath);
+    mtlBuffers[lodLevel] = obj::ReadFileToBuffer(mtlPath);
   }
 
   // assign task number before creating task and pass by value
@@ -57,11 +56,11 @@ std::future<ol::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, 
     taskNumber);
 }
 
-ol::Model ObjLoader::ConstructTask(const ol::LoaderState&                               t_state,
-                                   const std::unordered_map<unsigned int, std::string>& t_objBuffers,
-                                   const std::unordered_map<unsigned int, std::string>& t_mtlBuffers,
-                                   const std::chrono::duration<double, std::milli>      t_cacheElapsed,
-                                   unsigned int                                         t_taskNumber) {
+obj::Model ObjLoader::ConstructTask(const obj::LoaderState&                              t_state,
+                                    const std::unordered_map<unsigned int, std::string>& t_objBuffers,
+                                    const std::unordered_map<unsigned int, std::string>& t_mtlBuffers,
+                                    const std::chrono::duration<double, std::milli>      t_cacheElapsed,
+                                    unsigned int                                         t_taskNumber) {
   std::string        log;
   std::ostringstream id;
   id << std::this_thread::get_id();
@@ -69,25 +68,25 @@ ol::Model ObjLoader::ConstructTask(const ol::LoaderState&                       
   try {
     const Timer processTime;
     log = std::format("Started loading task #{} - {} on thread: {}", t_taskNumber, t_state.path.string(), id.str());
-    m_logger.LogInfo(log);
+    m_logger->Log<Logger::Debug>(log);
 
     // since lambda is immutable, and we have to std::move the state,
     // un-const t_state to pass the method for modification
-    auto m = LoadFileInternal(const_cast<ol::LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
+    auto m = LoadFileInternal(const_cast<obj::LoaderState&>(t_state), t_objBuffers, t_mtlBuffers);
 
     log = std::format("Successfully loaded task #{} in {:L}", t_taskNumber, processTime.Elapsed() + t_cacheElapsed);
-    m_logger.LogSuccess(log);
+    m_logger->Log<Logger::Debug>(log);
 
     return m;
   }
   catch (const std::exception& e) {
     log = std::format("Error loading model on thread {}: {}", id.str(), e.what());
-    m_logger.LogError(log);
+    m_logger->Log<Logger::Error>(log);
     throw; // still propagate to future
   }
   catch (...) {
     log = std::format("Error loading model on thread {}", id.str());
-    m_logger.LogError(log);
+    m_logger->Log<Logger::Error>(log);
     throw; // still propagate to future
   }
 }
@@ -99,33 +98,33 @@ ol::Model ObjLoader::ConstructTask(const ol::LoaderState&                       
  * @param t_mtlBuffer Map of every detected mtl loaded into memory as a std::string
  * @return Rvalue Model constructed with the processed data
  */
-ol::Model ObjLoader::LoadFileInternal(ol::LoaderState&                                     t_state,
-                                      const std::unordered_map<unsigned int, std::string>& t_objBuffer,
-                                      const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
+obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                                    t_state,
+                                       const std::unordered_map<unsigned int, std::string>& t_objBuffer,
+                                       const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
   // Load obj
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.filePaths) {
-    std::vector<ol::Mesh>& meshes = ol::GetMeshContainer(t_state, lodLevel);
+    std::vector<obj::Mesh>& meshes = obj::GetMeshContainer(t_state, lodLevel);
 
     t_state.tempMeshes.clear();
-    ol::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
-    ol::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
+    obj::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
+    obj::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
 
-    if ((t_state.flags & ol::Flag::Triangulate) == ol::Flag::Triangulate) {
-      ol::Triangulate(t_state, meshes);
+    if ((t_state.flags & obj::Flag::Triangulate) == obj::Flag::Triangulate) {
+      obj::Triangulate(t_state, meshes);
     }
 
-    if ((t_state.flags & ol::Flag::CalculateTangents) == ol::Flag::CalculateTangents) {
-      ol::CalcTangentSpace(meshes);
+    if ((t_state.flags & obj::Flag::CalculateTangents) == obj::Flag::CalculateTangents) {
+      obj::CalcTangentSpace(meshes);
     }
 
-    if ((t_state.flags & ol::Flag::JoinIdentical) == ol::Flag::JoinIdentical) {
-      ol::JoinIdenticalVertices(meshes);
+    if ((t_state.flags & obj::Flag::JoinIdentical) == obj::Flag::JoinIdentical) {
+      obj::JoinIdenticalVertices(meshes);
     }
   }
 
-  if ((t_state.flags & ol::Flag::CombineMeshes) == ol::Flag::CombineMeshes) {
-    ol::CombineMeshes(t_state);
+  if ((t_state.flags & obj::Flag::CombineMeshes) == obj::Flag::CombineMeshes) {
+    obj::CombineMeshes(t_state);
   }
 
-  return ol::Model(t_state.meshes, t_state.combinedMeshes, t_state.materials, t_state.path);
+  return obj::Model(t_state.meshes, t_state.combinedMeshes, t_state.materials, t_state.path);
 }
