@@ -103,7 +103,7 @@ void Logger::ThreadSafeLogMessage(std::string t_entry, ol::LogSeverity t_severit
   }
 
   // no thread dispatched, immediately flush to main thread
-  if (m_thread.joinable()) {
+  if (!m_thread.joinable()) {
     FlushQueue();
   }
   // notify thread
