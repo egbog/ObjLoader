@@ -69,6 +69,8 @@ void Logger::Shutdown() {
     m_shutdown = true;
   }
 
+  Log<Debug>(std::format("Logger worker closed on thread: {}", obj::QueuedTask::ThreadIdString(m_workerThreadId)));
+
   m_cv.notify_all(); // wake worker
 
   if (m_thread.joinable()) {
@@ -94,7 +96,8 @@ void Logger::ThreadSafeLogMessage(LogEntry t_entry) {
  * @brief A worker intended to be dispatched to a separate thread that will automatically detect messages that are inserted into the queue and will wait if the queue is empty.
  */
 void Logger::WorkerThread() {
-  Log<Debug>(std::format("Logger worker dispatched to thread: {}", obj::QueuedTask::ThreadIdString(std::this_thread::get_id())));
+  m_workerThreadId = std::this_thread::get_id();
+  Log<Debug>(std::format("Logger worker dispatched to thread: {}", obj::QueuedTask::ThreadIdString(m_workerThreadId)));
   while (true) {
     {
       std::unique_lock lock(m_waitLogMutex);

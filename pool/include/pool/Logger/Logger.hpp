@@ -53,9 +53,10 @@ private:
   void ThreadSafeLogMessage(LogEntry t_entry);
   void WorkerThread();
 
-  std::jthread            m_thread;       // Worker thread
-  std::queue<LogEntry>    m_logQueue;     // The message queue
-  std::mutex              m_waitLogMutex; // Mutex for inserting and popping into the queue
-  std::condition_variable m_cv;           // Cv to wait thread
+  std::jthread            m_thread;         // Worker thread
+  std::queue<LogEntry>    m_logQueue;       // The message queue
+  std::mutex              m_waitLogMutex;   // Mutex for inserting and popping into the queue
+  std::condition_variable m_cv;             // Cv to wait thread
+  std::thread::id         m_workerThreadId; // The thread id of the dispatched worker
   bool                    m_shutdown = false;
 };
