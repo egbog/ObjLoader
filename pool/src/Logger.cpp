@@ -50,44 +50,44 @@ void Logger::FlushQueue() {
   {
     std::lock_guard lock(m_waitLogMutex);
     std::swap(local, m_logQueue); // grab everything fast
-  }
 
-  while (!local.empty()) {
-    auto [message, severity] = local.front();
-    switch (severity) {
-      case ol::Debug: {
-        SetConsoleTextAttribute(hConsole, 8);
-        message = std::format("[{}] - Debug: {}\n", m_source, message);
-        break;
+    while (!local.empty()) {
+      auto [message, severity] = local.front();
+      switch (severity) {
+        case ol::Debug: {
+          SetConsoleTextAttribute(hConsole, 8);
+          message = std::format("[{}] - Debug: {}\n", m_source, message);
+          break;
+        }
+        case ol::Info: {
+          SetConsoleTextAttribute(hConsole, 7);
+          message = std::format("[{}] - Info: {}\n", m_source, message);
+          break;
+        }
+        case ol::Warning: {
+          SetConsoleTextAttribute(hConsole, 6);
+          message = std::format("[{}] - Warning: {}\n", m_source, message);
+          break;
+        }
+        case ol::Error: {
+          SetConsoleTextAttribute(hConsole, 4);
+          message = std::format("[{}] - Error: {}\n", m_source, message);
+          break;
+        }
+        case ol::Success: {
+          SetConsoleTextAttribute(hConsole, 2);
+          message = std::format("[{}] - Success: {}\n", m_source, message);
+          break;
+        }
+        case ol::None: {
+          SetConsoleTextAttribute(hConsole, 7);
+          break;
+        }
       }
-      case ol::Info: {
-        SetConsoleTextAttribute(hConsole, 7);
-        message = std::format("[{}] - Info: {}\n", m_source, message);
-        break;
-      }
-      case ol::Warning: {
-        SetConsoleTextAttribute(hConsole, 6);
-        message = std::format("[{}] - Warning: {}\n", m_source, message);
-        break;
-      }
-      case ol::Error: {
-        SetConsoleTextAttribute(hConsole, 4);
-        message = std::format("[{}] - Error: {}\n", m_source, message);
-        break;
-      }
-      case ol::Success: {
-        SetConsoleTextAttribute(hConsole, 2);
-        message = std::format("[{}] - Success: {}\n", m_source, message);
-        break;
-      }
-      case ol::None: {
-        SetConsoleTextAttribute(hConsole, 7);
-        break;
-      }
+      std::cout << message;
+      SetConsoleTextAttribute(hConsole, 7);
+      local.pop();
     }
-    std::cout << message;
-    SetConsoleTextAttribute(hConsole, 7);
-    local.pop();
   }
 }
 
