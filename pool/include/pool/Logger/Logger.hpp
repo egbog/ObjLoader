@@ -1,7 +1,9 @@
 #pragma once
 
 #define NOMINMAX
-#include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <map>
 #include <mutex>
 #include <queue>
 #include <windows.h>
@@ -11,11 +13,10 @@ class Logger
 public:
   enum LogSeverity : uint8_t
   {
-    Debug,
-    Info,
-    Warning,
     Error,
-    Success,
+    Warning,
+    Info,
+    Debug,
     None
   };
 
@@ -39,15 +40,14 @@ public:
     }
 
     ~ConsoleColor() { SetConsoleTextAttribute(h, original); }
-    ConsoleColor& operator=(ConsoleColor& t_other)  = delete;
-    ConsoleColor& operator=(ConsoleColor&& t_other) = delete;
-    ConsoleColor(ConsoleColor& t_other)             = delete;
-    ConsoleColor(ConsoleColor&& t_other)            = delete;
+    ConsoleColor& operator=(const ConsoleColor&) = delete;
+    ConsoleColor& operator=(ConsoleColor&&)      = delete;
+    ConsoleColor(const ConsoleColor&)            = delete;
+    ConsoleColor(ConsoleColor&&)                 = delete;
   };
 
   //-------------------------------------------------------------------------------------------------------------------
   // Constructors/operators
-  Logger() = default;
   ~Logger();
   Logger& operator=(Logger& t_other)  = delete;
   Logger& operator=(Logger&& t_other) = delete;
@@ -67,20 +67,28 @@ public:
     ThreadSafeLogMessage(LogEntry(t_entry, Severity));
   }
 
-  void FlushQueue();
   void Shutdown();
 
-  LogSeverity currentLogLevel = Debug; // The severity level of log messages to print
+  LogSeverity           currentLogLevel     = Debug; // The severity level of log messages to print
+  LogSeverity           currentDiskLogLevel = Debug; // The severity level of log messages to print
+  std::filesystem::path pathToLog;
+  std::string           logName = "log.txt";
+
 private:
-  [[nodiscard]] bool    IsLogLevelEnabled(LogSeverity t_logLevel) const;
+  Logger();
+  [[nodiscard]] bool    IsLogLevelEnabled(LogSeverity t_logLevel, bool t_disk = false) const;
   constexpr static WORD GetSeverityColor(LogSeverity t_logLevel);
   void                  ThreadSafeLogMessage(LogEntry t_entry);
   void                  WorkerThread();
+  void                  FlushQueue();
 
-  std::jthread            m_thread;         // Worker thread
-  std::queue<LogEntry>    m_logQueue;       // The message queue
-  std::mutex              m_waitLogMutex;   // Mutex for inserting and popping into the queue
-  std::condition_variable m_cv;             // Cv to wait thread
-  std::thread::id         m_workerThreadId; // The thread id of the dispatched worker
-  bool                    m_shutdown = false;
+  std::jthread                       m_thread;         // Worker thread
+  std::queue<LogEntry>               m_logQueue;       // The message queue
+  std::mutex                         m_waitLogMutex;   // Mutex for inserting and popping into the queue
+  std::condition_variable            m_cv;             // Cv to wait thread
+  std::thread::id                    m_workerThreadId; // The thread id of the dispatched worker
+  bool                               m_shutdown  = false;
+  bool                               m_logToDisk = false;
+  std::ofstream                      m_diskFile; // disk log file
+  std::map<LogSeverity, std::string> m_severityNames = {{Error, "Error"}, {Warning, "Warning"}, {Info, "Info"}, {Debug, "Debug"}};
 };
