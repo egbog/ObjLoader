@@ -4,14 +4,6 @@
 
 #include <iostream>
 
-Logger::Logger() {
-  char*  appdata;
-  size_t len;
-  _dupenv_s(&appdata, &len, "APPDATA");
-  pathToLog = std::filesystem::path(appdata) / "Test/";
-  free(appdata);
-}
-
 Logger::~Logger() {
   Shutdown();
   m_diskFile.flush();

@@ -71,11 +71,11 @@ public:
 
   LogSeverity           currentLogLevel     = Debug; // The severity level of log messages to print
   LogSeverity           currentDiskLogLevel = Debug; // The severity level of log messages to print
-  std::filesystem::path pathToLog;
+  std::filesystem::path pathToLog = "logs/";
   std::string           logName = "log.txt";
 
 private:
-  Logger();
+  Logger() = default;
   [[nodiscard]] bool    IsLogLevelEnabled(LogSeverity t_logLevel, bool t_disk = false) const;
   constexpr static WORD GetSeverityColor(LogSeverity t_logLevel);
   void                  ThreadSafeLogMessage(LogEntry t_entry);
