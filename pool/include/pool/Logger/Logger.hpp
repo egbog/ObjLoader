@@ -1,20 +1,22 @@
 #pragma once
 
+#define NOMINMAX
 #include <iostream>
 #include <mutex>
 #include <queue>
+#include <windows.h>
 
 class Logger
 {
 public:
   enum LogSeverity : uint8_t
   {
-    None,
     Debug,
     Info,
     Warning,
     Error,
-    Success
+    Success,
+    None
   };
 
   struct LogEntry
@@ -22,6 +24,25 @@ public:
     LogEntry(std::string t_message, const LogSeverity t_severity) : message(std::move(t_message)), severity(t_severity) {}
     std::string message;
     LogSeverity severity;
+  };
+
+  struct ConsoleColor
+  {
+    HANDLE h;
+    WORD   original;
+
+    ConsoleColor(const HANDLE t_h, const WORD t_c) : h(t_h) {
+      CONSOLE_SCREEN_BUFFER_INFO info;
+      GetConsoleScreenBufferInfo(t_h, &info);
+      original = info.wAttributes;
+      SetConsoleTextAttribute(t_h, t_c);
+    }
+
+    ~ConsoleColor() { SetConsoleTextAttribute(h, original); }
+    ConsoleColor& operator=(ConsoleColor& t_other)  = delete;
+    ConsoleColor& operator=(ConsoleColor&& t_other) = delete;
+    ConsoleColor(ConsoleColor& t_other)             = delete;
+    ConsoleColor(ConsoleColor&& t_other)            = delete;
   };
 
   //-------------------------------------------------------------------------------------------------------------------
@@ -49,9 +70,12 @@ public:
   void FlushQueue();
   void Shutdown();
 
+  LogSeverity currentLogLevel = Debug; // The severity level of log messages to print
 private:
-  void ThreadSafeLogMessage(LogEntry t_entry);
-  void WorkerThread();
+  [[nodiscard]] bool    IsLogLevelEnabled(LogSeverity t_logLevel) const;
+  constexpr static WORD GetSeverityColor(LogSeverity t_logLevel);
+  void                  ThreadSafeLogMessage(LogEntry t_entry);
+  void                  WorkerThread();
 
   std::jthread            m_thread;         // Worker thread
   std::queue<LogEntry>    m_logQueue;       // The message queue
