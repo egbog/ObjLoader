@@ -77,17 +77,6 @@ namespace obj
     Mesh& operator=(const Mesh& t_other) = default;
     Mesh& operator=(Mesh&& t_other)      = default;
     //-------------------------------------------------------------------------------------------------------------------
-
-    /*Mesh& operator=(Mesh&& t_other) noexcept {
-      if (this != &t_other) {
-        glDeleteBuffers(1, &m_id);
-        m_id         = t_other.m_id;
-        m_type       = t_other.m_type;
-        t_other.m_id = 0;
-      }
-      return *this;
-    }*/
-
     std::string  name;
     std::string  material;
     unsigned int lodLevel   = 0;
