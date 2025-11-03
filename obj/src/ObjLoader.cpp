@@ -67,7 +67,8 @@ obj::Model ObjLoader::ConstructTask(const obj::LoaderState&                     
 
   try {
     const Timer processTime;
-    log = std::format("Started loading task #{} - {} on thread: {}", t_taskNumber, t_state.path.lexically_relative(t_state.path.parent_path()).generic_string(), id.str());
+    const auto parent = t_state.path.parent_path().parent_path().parent_path(); // two levels up
+    log = std::format("Started loading task #{} - {} on thread: {}", t_taskNumber, t_state.path.lexically_relative(parent).generic_string(), id.str());
     m_logger->Log<Logger::Debug>(log);
 
     // since lambda is immutable, and we have to std::move the state,
