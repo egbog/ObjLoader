@@ -12,13 +12,17 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/pool pool)
 
 # Source files
 file(GLOB_RECURSE OBJ_SRC
+	"main.cpp"
 	"obj/src/*.cpp"
 	"obj/include/*.h"
 	"obj/include/*.hpp"
 	"obj/include/*.inl"
 )
 
-add_library(obj STATIC ${OBJ_SRC})
+list(FILTER OBJ_SRC EXCLUDE REGEX ".*/build/.*")
+
+#add_library(obj STATIC ${OBJ_SRC})
+add_executable(obj ${OBJ_SRC})
 
 # Header only GLM
 if (NOT TARGET glm::glm)
