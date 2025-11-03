@@ -21,6 +21,7 @@ namespace obj
     std::vector<std::string> specularName;
     std::vector<std::string> normalName;
     std::vector<std::string> heightName;
+    bool isTiled;
   };
 
   struct Vertex

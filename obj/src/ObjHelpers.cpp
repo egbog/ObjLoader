@@ -183,6 +183,11 @@ namespace obj
     glm::uvec3 indexOffset{0};
     glm::uvec3 maxIndexSeen{0};
 
+    glm::vec2 uvMin(FLT_MAX);
+    glm::vec2 uvMax(-FLT_MAX);
+
+    unsigned int mtlCount = 0;
+
     while (data < end) {
       const char* lineStart = data;
       while (data < end && *data != '\n' && *data != '\r') {
@@ -233,6 +238,9 @@ namespace obj
         ptr = ParseFloat(ptr, ptrEnd, x);
         ptr = ParseFloat(ptr, ptrEnd, y);
         t_state.tempMeshes[meshCount].texCoords.emplace_back(x, 1.0 - y);
+
+        uvMin = glm::min(uvMin, x);
+        uvMax = glm::max(uvMax, 1.0f - y);
       }
       else if (line.starts_with("vn")) {
         const char* ptr    = line.data() + 2;
@@ -245,6 +253,17 @@ namespace obj
       }
       else if (line.starts_with("usemtl")) {
         t_meshes[meshCount].material = std::string(line.substr(7));
+
+        glm::vec2 uvRange = uvMax - uvMin;
+        bool isTiled = (uvRange.x > 1.0f || uvRange.y > 1.0f);
+
+        t_state.materials[t_lodLevel][mtlCount].isTiled = isTiled; // TODO: dont assume materials are used in the same order as definitions
+
+        // reset uv count
+        uvMax = glm::vec2(FLT_MAX);
+        uvMin = glm::vec2(FLT_MIN);
+
+        mtlCount++;
       }
       else if (line.starts_with("mtllib")) {
         t_state.mtlFileName = std::string(line.substr(7));

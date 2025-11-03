@@ -107,8 +107,8 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
     std::vector<obj::Mesh>& meshes = obj::GetMeshContainer(t_state, lodLevel);
 
     t_state.tempMeshes.clear();
-    obj::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
     obj::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
+    obj::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
 
     if ((t_state.flags & obj::Flag::Triangulate) == obj::Flag::Triangulate) {
       obj::Triangulate(t_state, meshes);
