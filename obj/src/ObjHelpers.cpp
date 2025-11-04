@@ -398,16 +398,16 @@ namespace obj
       }
       else if (mtlCount >= 0) {
         if (prefix == "map_Kd") {
-          t_state.materials[t_lodLevel][mtlCount].diffuseName.emplace_back(value);
+          t_state.materials[t_lodLevel][mtlCount].diffuseName =value;
         }
         else if (prefix == "map_Ks" || prefix == "map_Ns") {
-          t_state.materials[t_lodLevel][mtlCount].specularName.emplace_back(value);
+          t_state.materials[t_lodLevel][mtlCount].specularName =value;
         }
         else if (prefix == "map_Bump" || prefix == "bump") {
-          t_state.materials[t_lodLevel][mtlCount].normalName.emplace_back(value);
+          t_state.materials[t_lodLevel][mtlCount].normalName =value;
         }
         else if (prefix == "disp") {
-          t_state.materials[t_lodLevel][mtlCount].heightName.emplace_back(value);
+          t_state.materials[t_lodLevel][mtlCount].heightName =value;
         }
       }
 

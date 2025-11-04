@@ -16,12 +16,12 @@ namespace obj
 
   struct Material
   {
-    std::string              name;
-    std::vector<std::string> diffuseName;
-    std::vector<std::string> specularName;
-    std::vector<std::string> normalName;
-    std::vector<std::string> heightName;
-    bool                     isTiled;
+    std::string name;
+    std::string diffuseName;
+    std::string specularName;
+    std::string normalName;
+    std::string heightName;
+    bool        isTiled;
   };
 
   struct Vertex
