@@ -8,7 +8,6 @@
 #include <fast_float/fast_float.h>
 
 #include <glm/geometric.hpp>
-#include <glm/gtx/norm.hpp>
 
 namespace obj
 {
@@ -467,11 +466,11 @@ namespace obj
 
         const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
 
-        const float len2T = glm::length2(tangent);
-        const float len2B = glm::length2(bitangent);
+        const float lenT = glm::length(tangent);
+        const float lenB = glm::length(bitangent);
 
         // skip degenerate tri
-        if (!std::isfinite(len2T) || len2T < 1e-16f || !std::isfinite(len2B) || len2B < 1e-16f) {
+        if (!std::isfinite(lenT) || lenT < 1e-10f || !std::isfinite(lenB) || lenB < 1e-10f) {
           continue;
         }
 
@@ -490,7 +489,7 @@ namespace obj
 
         glm::vec3 t(1, 0, 0);
 
-        if (glm::length2(v.tangent) > 1e-16f) {
+        if (glm::length(v.tangent) > 1e-10f) {
           // Gram-Schmidt orthogonalize
           t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
         }
