@@ -471,7 +471,7 @@ namespace obj
         const float len2B = glm::length2(bitangent);
 
         // skip degenerate tri
-        if (!std::isfinite(len2T) || len2T < 1e-20f || !std::isfinite(len2B) || len2B < 1e-20f) {
+        if (!std::isfinite(len2T) || len2T < 1e-16f || !std::isfinite(len2B) || len2B < 1e-16f) {
           continue;
         }
 
@@ -488,13 +488,12 @@ namespace obj
       for (size_t i = 0; i < mesh.vertices.size(); ++i) {
         auto& v = mesh.vertices[i];
 
-        if (glm::length2(v.tangent) < 1e-20f) {
-          t = glm::vec3(1, 0, 0);
+        glm::vec3 t(1, 0, 0);
+
+        if (glm::length2(v.tangent) > 1e-16f) {
+          // Gram-Schmidt orthogonalize
+          t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
         }
-
-
-        // Gram-Schmidt orthogonalize
-        glm::vec3 t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
 
         // Handedness from unnormalized bitangent
         const float handedness = (glm::dot(glm::cross(v.normal, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
