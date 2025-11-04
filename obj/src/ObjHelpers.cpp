@@ -1,4 +1,4 @@
-#include "obj/ObjHelpers.hpp"
+﻿#include "obj/ObjHelpers.hpp"
 
 #include "obj/ObjLoader.hpp"
 
@@ -249,9 +249,10 @@ namespace obj
         t_meshes[meshCount].material = std::string(line.substr(7));
 
         glm::vec2 uvRange = uvMax - uvMin;
-        bool isTiled = (uvRange.x > 1.0f || uvRange.y > 1.0f);
+        bool      isTiled = (uvRange.x > 1.0f || uvRange.y > 1.0f);
 
-        t_state.materials[t_lodLevel][mtlCount].isTiled = isTiled; // TODO: dont assume materials are used in the same order as definitions
+        t_state.materials[t_lodLevel][mtlCount].isTiled = isTiled;
+        // TODO: dont assume materials are used in the same order as definitions
 
         // reset uv count
         uvMax = glm::vec2(FLT_MAX);
@@ -266,7 +267,7 @@ namespace obj
         const char* ptr    = line.data() + 2;
         const char* ptrEnd = line.data() + line.size();
 
-        unsigned int            faceSize = 0;
+        unsigned int              faceSize = 0;
         std::array<glm::uvec3, 4> face;
 
         while (ptr < ptrEnd && faceSize < 4) {
@@ -544,19 +545,19 @@ namespace obj
       std::vector<Vertex> newVertices;
       newVertices.reserve(mesh.indices.size());
 
-      for (const auto idx : mesh.indices)
-      {
-          const Vertex& v = mesh.vertices[idx];
-          auto it = uniqueVertices.find(v);
+      for (const auto idx : mesh.indices) {
+        const Vertex& v  = mesh.vertices[idx];
+        auto          it = uniqueVertices.find(v);
 
-          if (it == uniqueVertices.end()) {
-            const unsigned int newIndex = static_cast<unsigned int>(newVertices.size());
-            uniqueVertices.emplace(v, newIndex);
-            newVertices.push_back(v);
-            newIndices.push_back(newIndex);
-          } else {
-            newIndices.push_back(it->second);
-          }
+        if (it == uniqueVertices.end()) {
+          const unsigned int newIndex = static_cast<unsigned int>(newVertices.size());
+          uniqueVertices.emplace(v, newIndex);
+          newVertices.push_back(v);
+          newIndices.push_back(newIndex);
+        }
+        else {
+          newIndices.push_back(it->second);
+        }
       }
 
       mesh.indices.swap(newIndices);

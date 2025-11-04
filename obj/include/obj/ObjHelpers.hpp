@@ -73,7 +73,7 @@ namespace obj
     }
 
     size_t operator()(const Vertex& t_v) const noexcept {
-      size_t h            = 0;
+      size_t h           = 0;
       auto   hashCombine = [&] (const int t_q)
       {
         h ^= std::hash<int>{}(t_q) + 0x9e3779b9 + (h << 6) + (h >> 2);
