@@ -3,12 +3,12 @@
 #include "obj/ObjLoader.hpp"
 
 #include <fstream>
-#include <numeric>
 #include <ranges>
 
 #include <fast_float/fast_float.h>
 
 #include <glm/geometric.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace obj
 {
@@ -467,6 +467,14 @@ namespace obj
 
         const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
 
+        const float len2T = glm::length2(tangent);
+        const float len2B = glm::length2(bitangent);
+
+        // skip degenerate tri
+        if (!std::isfinite(len2T) || len2T < 1e-20f || !std::isfinite(len2B) || len2B < 1e-20f) {
+          continue;
+        }
+
         const float area = glm::length(glm::cross(v1.position - v0.position, v2.position - v0.position)) * 0.5f;
 
         v0.tangent += glm::vec4(tangent, 0.0f) * area;
@@ -479,6 +487,11 @@ namespace obj
 
       for (size_t i = 0; i < mesh.vertices.size(); ++i) {
         auto& v = mesh.vertices[i];
+
+        if (glm::length2(v.tangent) < 1e-20f) {
+          t = glm::vec3(1, 0, 0);
+        }
+
 
         // Gram-Schmidt orthogonalize
         glm::vec3 t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
