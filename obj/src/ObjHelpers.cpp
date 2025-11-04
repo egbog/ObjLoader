@@ -499,47 +499,72 @@ namespace obj
         continue;
       }
 
-      const size_t              n = mesh.vertices.size();
-      std::vector<unsigned int> indexMap(n);
-      std::iota(indexMap.begin(), indexMap.end(), 0);
-
-      // Sort indices by vertex value
-      std::ranges::sort(
-        indexMap,
-        [&] (const unsigned int t_a, const unsigned int t_b)
-        {
-          return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
-        });
+      std::unordered_map<Vertex, unsigned int, VertexHasher, VertexEqual> uniqueVertices;
+      std::vector<unsigned int> newIndices;
+      newIndices.reserve(mesh.indices.size());
 
       std::vector<Vertex> newVertices;
-      newVertices.reserve(n);
-      std::vector<unsigned int> remap(n);
+      newVertices.reserve(mesh.indices.size());
 
-      // Deduplicate vertices while tracking new index mapping
-      unsigned int nextIndex = 0;
-      newVertices.emplace_back(mesh.vertices[indexMap[0]]);
-      remap[indexMap[0]] = nextIndex;
+      for (const auto idx : mesh.indices)
+      {
+          const Vertex& v = mesh.vertices[idx];
+          auto it = uniqueVertices.find(v);
 
-      for (size_t i = 1; i < n; ++i) {
-        const Vertex& curr = mesh.vertices[indexMap[i]];
-        const Vertex& prev = mesh.vertices[indexMap[i - 1]];
-
-        if (curr != prev) {
-          ++nextIndex;
-          newVertices.emplace_back(curr);
-        }
-        remap[indexMap[i]] = nextIndex;
+          if (it == uniqueVertices.end()) {
+            const unsigned int newIndex = static_cast<unsigned int>(newVertices.size());
+            uniqueVertices.emplace(v, newIndex);
+            newVertices.push_back(v);
+            newIndices.push_back(newIndex);
+          } else {
+            newIndices.push_back(it->second);
+          }
       }
 
-      for (auto& idx : mesh.indices) {
-        idx = remap[idx];
-      }
-
-      // Resize newVertices to actual number of unique vertices
-      newVertices.resize(nextIndex + 1);
-
-      // Remap mesh.indices to the deduplicated set
+      mesh.indices.swap(newIndices);
       mesh.vertices.swap(newVertices);
+
+      //const size_t              n = mesh.vertices.size();
+      //std::vector<unsigned int> indexMap(n);
+      //std::iota(indexMap.begin(), indexMap.end(), 0);
+      //
+      //// Sort indices by vertex value
+      //std::ranges::sort(
+      //  indexMap,
+      //  [&] (const unsigned int t_a, const unsigned int t_b)
+      //  {
+      //    return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
+      //  });
+      //
+      //std::vector<Vertex> newVertices;
+      //newVertices.reserve(n);
+      //std::vector<unsigned int> remap(n);
+      //
+      //// Deduplicate vertices while tracking new index mapping
+      //unsigned int nextIndex = 0;
+      //newVertices.emplace_back(mesh.vertices[indexMap[0]]);
+      //remap[indexMap[0]] = nextIndex;
+      //
+      //for (size_t i = 1; i < n; ++i) {
+      //  const Vertex& curr = mesh.vertices[indexMap[i]];
+      //  const Vertex& prev = mesh.vertices[indexMap[i - 1]];
+      //
+      //  if (curr != prev) {
+      //    ++nextIndex;
+      //    newVertices.emplace_back(curr);
+      //  }
+      //  remap[indexMap[i]] = nextIndex;
+      //}
+      //
+      //for (auto& idx : mesh.indices) {
+      //  idx = remap[idx];
+      //}
+      //
+      //// Resize newVertices to actual number of unique vertices
+      //newVertices.resize(nextIndex + 1);
+      //
+      //// Remap mesh.indices to the deduplicated set
+      //mesh.vertices.swap(newVertices);
     }
   }
 

@@ -21,7 +21,7 @@ namespace obj
     std::vector<std::string> specularName;
     std::vector<std::string> normalName;
     std::vector<std::string> heightName;
-    bool isTiled;
+    bool                     isTiled;
   };
 
   struct Vertex
@@ -61,6 +61,49 @@ namespace obj
 
     constexpr bool operator<(const Vertex& t_other) const noexcept {
       return AsArrayQuantized() < t_other.AsArrayQuantized();
+    }
+  };
+
+  struct VertexHasher
+  {
+    static constexpr float SCALE = 100000.0f;
+
+    static int Quantize(const float t_v) noexcept {
+      return static_cast<int>(std::round(t_v * SCALE));
+    }
+
+    size_t operator()(const Vertex& t_v) const noexcept {
+      size_t h            = 0;
+      auto   hashCombine = [&] (const int t_q)
+      {
+        h ^= std::hash<int>{}(t_q) + 0x9e3779b9 + (h << 6) + (h >> 2);
+      };
+
+      hashCombine(Quantize(t_v.position.x));
+      hashCombine(Quantize(t_v.position.y));
+      hashCombine(Quantize(t_v.position.z));
+      hashCombine(Quantize(t_v.normal.x));
+      hashCombine(Quantize(t_v.normal.y));
+      hashCombine(Quantize(t_v.normal.z));
+      hashCombine(Quantize(t_v.texCoords.x));
+      hashCombine(Quantize(t_v.texCoords.y));
+      hashCombine(Quantize(t_v.tangent.x));
+      hashCombine(Quantize(t_v.tangent.y));
+      hashCombine(Quantize(t_v.tangent.z));
+      hashCombine(Quantize(t_v.tangent.w));
+
+      return h;
+    }
+  };
+
+  struct VertexEqual
+  {
+    bool operator()(const Vertex& t_a, const Vertex& t_b) const noexcept {
+      constexpr float eps = 1e-6f;
+      return glm::all(glm::lessThan(glm::abs(t_a.position - t_b.position), glm::vec3(eps))) && glm::all(
+        glm::lessThan(glm::abs(t_a.normal - t_b.normal), glm::vec3(eps))) && glm::all(
+        glm::lessThan(glm::abs(t_a.texCoords - t_b.texCoords), glm::vec2(eps))) && glm::all(
+        glm::lessThan(glm::abs(t_a.tangent - t_b.tangent), glm::vec4(eps)));
     }
   };
 
