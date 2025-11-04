@@ -246,13 +246,18 @@ namespace obj
         t_state.tempMeshes[meshCount].normals.emplace_back(x, y, z);
       }
       else if (line.starts_with("usemtl")) {
-        t_meshes[meshCount].material = std::string(line.substr(7));
+        auto name = std::string(line.substr(7));
 
         glm::vec2 uvRange = uvMax - uvMin;
         bool      isTiled = (uvRange.x > 1.0f || uvRange.y > 1.0f);
 
-        t_state.materials[t_lodLevel][mtlCount].isTiled = isTiled;
-        // TODO: dont assume materials are used in the same order as definitions
+        // pull texture names from cached mtl data and construct ordered mesh materials
+        for (auto& mat : t_state.materials[t_lodLevel]) {
+          if (mat.name == name) {
+            t_meshes[meshCount].material = mat;
+            t_meshes[meshCount].material.isTiled = isTiled;
+          }
+        }
 
         // reset uv count
         uvMax = glm::vec2(FLT_MAX);
@@ -398,16 +403,16 @@ namespace obj
       }
       else if (mtlCount >= 0) {
         if (prefix == "map_Kd") {
-          t_state.materials[t_lodLevel][mtlCount].diffuseName =value;
+          t_state.materials[t_lodLevel][mtlCount].diffuseName = value;
         }
         else if (prefix == "map_Ks" || prefix == "map_Ns") {
-          t_state.materials[t_lodLevel][mtlCount].specularName =value;
+          t_state.materials[t_lodLevel][mtlCount].specularName = value;
         }
         else if (prefix == "map_Bump" || prefix == "bump") {
-          t_state.materials[t_lodLevel][mtlCount].normalName =value;
+          t_state.materials[t_lodLevel][mtlCount].normalName = value;
         }
         else if (prefix == "disp") {
-          t_state.materials[t_lodLevel][mtlCount].heightName =value;
+          t_state.materials[t_lodLevel][mtlCount].heightName = value;
         }
       }
 

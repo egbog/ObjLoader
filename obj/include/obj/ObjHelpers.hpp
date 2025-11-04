@@ -113,7 +113,7 @@ namespace obj
     // Constructors/operators
     Mesh() = default;
 
-    Mesh(const std::vector<Vertex>& t_vertices, Indices t_indices) : vertices(t_vertices), indices(std::move(t_indices)) {}
+    //Mesh(const std::vector<Vertex>& t_vertices, Indices t_indices) : vertices(t_vertices), indices(std::move(t_indices)) {}
 
     ~Mesh()                              = default;
     Mesh(const Mesh& t_other)            = default;
@@ -122,7 +122,7 @@ namespace obj
     Mesh& operator=(Mesh&& t_other)      = default;
     //-------------------------------------------------------------------------------------------------------------------
     std::string  name;
-    std::string  material;
+    Material     material;
     unsigned int lodLevel   = 0;
     int          meshNumber = -1;
 
@@ -136,9 +136,8 @@ namespace obj
     // Constructors/operators
     explicit Model(std::map<unsigned int, std::vector<Mesh>>& t_meshes,
                    std::vector<Mesh>& t_combinedMeshes,
-                   std::map<unsigned int, std::vector<Material>>& t_materials,
-                   std::filesystem::path t_path) : meshes(std::move(t_meshes)), materials(std::move(t_materials)),
-                                                   combinedMeshes(std::move(t_combinedMeshes)), path(std::move(t_path)) {}
+                   std::filesystem::path t_path) : meshes(std::move(t_meshes)), combinedMeshes(std::move(t_combinedMeshes)),
+                                                   path(std::move(t_path)) {}
 
     ~Model()                           = default;
     Model(const Model&)                = delete;
@@ -147,10 +146,9 @@ namespace obj
     Model& operator=(Model&&) noexcept = default;
     //-------------------------------------------------------------------------------------------------------------------
 
-    std::map<unsigned int, std::vector<Mesh>>     meshes;
-    std::map<unsigned int, std::vector<Material>> materials;
-    std::vector<Mesh>                             combinedMeshes;
-    std::filesystem::path                         path;
+    std::map<unsigned int, std::vector<Mesh>> meshes;
+    std::vector<Mesh>     combinedMeshes;
+    std::filesystem::path path;
   };
 
   enum class Flag : uint8_t
@@ -194,11 +192,11 @@ namespace obj
     std::string           mtlFileName;
     Flag                  flags;
 
-    std::vector<File>                             filePaths;
-    std::map<unsigned int, std::vector<Mesh>>     meshes; // final calculated meshes
-    std::vector<Mesh>                             combinedMeshes;
-    std::map<unsigned int, std::vector<Material>> materials;  // final materials
-    std::vector<TempMeshes>                       tempMeshes; // interim storage
+    std::vector<File>                             filePaths;      // interim file paths, discarded
+    std::map<unsigned int, std::vector<Mesh>>     meshes;         // final calculated meshes, moved
+    std::vector<Mesh>                             combinedMeshes; // final combined meshes, moved
+    std::map<unsigned int, std::vector<Material>> materials;      // interim .mtl materials, discarded
+    std::vector<TempMeshes>                       tempMeshes;     // interim storage, discarded
   };
 
   std::string ReadFileToBuffer(const std::filesystem::path& t_path);

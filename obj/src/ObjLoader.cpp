@@ -135,5 +135,5 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
     obj::CombineMeshes(t_state);
   }
 
-  return obj::Model(t_state.meshes, t_state.combinedMeshes, t_state.materials, t_state.path);
+  return obj::Model(t_state.meshes, t_state.combinedMeshes, t_state.path);
 }
