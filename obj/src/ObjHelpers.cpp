@@ -306,13 +306,13 @@ namespace obj
         // triangulate
         else if (faceSize == 4) {
           // Split along v0 → v2 diagonal
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[0]);
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[1]);
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[2]);
+          t_state.tempMeshes[meshCount].faceIndices.push_back(face[0]);
+          t_state.tempMeshes[meshCount].faceIndices.push_back(face[1]);
+          t_state.tempMeshes[meshCount].faceIndices.push_back(face[2]);
 
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[0]);
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[2]);
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[3]);
+          t_state.tempMeshes[meshCount].faceIndices.push_back(face[0]);
+          t_state.tempMeshes[meshCount].faceIndices.push_back(face[2]);
+          t_state.tempMeshes[meshCount].faceIndices.push_back(face[3]);
         }
       }
     }
