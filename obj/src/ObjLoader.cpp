@@ -110,9 +110,7 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
     obj::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
     obj::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
 
-    if ((t_state.flags & obj::Flag::Triangulate) == obj::Flag::Triangulate) {
-      obj::Triangulate(t_state, meshes);
-    }
+    obj::ConstructVertices(t_state, meshes);
 
     if ((t_state.flags & obj::Flag::JoinIdentical) == obj::Flag::JoinIdentical) {
       obj::JoinIdenticalVertices(meshes);

@@ -263,8 +263,13 @@ namespace obj
         t_state.mtlFileName = std::string(line.substr(7));
       }
       else if (line.starts_with("f ")) {
-        const char* ptr = line.data() + 2;
-        for (int i = 0; i < 3; i++) {
+        const char* ptr    = line.data() + 2;
+        const char* ptrEnd = line.data() + line.size();
+
+        unsigned int            faceSize = 0;
+        std::array<glm::uvec3, 4> face;
+
+        while (ptr < ptrEnd && faceSize < 4) {
           glm::uvec3 u{};
           u.x = std::strtoul(ptr, const_cast<char**>(&ptr), 10);
           if (*ptr == '/') {
@@ -279,16 +284,34 @@ namespace obj
           // Track max values for this mesh
           maxIndexSeen = glm::max(maxIndexSeen, u);
 
+          // Decrement for 0-based indices
           --u;
-
-          // Rebase against offset
           u -= indexOffset;
 
-          t_state.tempMeshes[meshCount].faceIndices.emplace_back(u);
+          face[faceSize++] = u;
 
-          while (*ptr == ' ') {
+          // Skip spaces
+          while (ptr < ptrEnd && *ptr == ' ') {
             ++ptr;
           }
+        }
+
+        if (faceSize == 3) {
+          t_state.tempMeshes[meshCount].faceIndices.insert(
+            t_state.tempMeshes[meshCount].faceIndices.end(),
+            face.begin(),
+            face.begin() + 3);
+        }
+        // triangulate
+        else if (faceSize == 4) {
+          // Split along v0 → v2 diagonal
+          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[0]);
+          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[1]);
+          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[2]);
+
+          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[0]);
+          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[2]);
+          t_state.tempMeshes[meshCount].faceIndices.emplace_back(face[3]);
         }
       }
     }
@@ -436,7 +459,7 @@ namespace obj
    * @param t_state Internal state data used to grab vertex, normal, and texture coordinate data from temporary containers.
    * @param t_meshes List of meshes to populate with triangulated vertex and index data.
    */
-  void Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes) {
+  void ConstructVertices(LoaderState& t_state, std::vector<Mesh>& t_meshes) {
     for (unsigned int a = 0; a < t_meshes.size(); ++a) {
       for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
         // fetch each triangle from our face indices

@@ -209,7 +209,7 @@ namespace obj
   void ParseMtl(LoaderState& t_state, const std::string& t_buffer, const unsigned int& t_lodLevel);
   std::vector<Mesh>& GetMeshContainer(LoaderState& t_state, unsigned int t_lodLevel = 0);
   std::pair<glm::vec3, glm::vec3> GetTangentCoords(const Vertex& t_v1, const Vertex& t_v2, const Vertex& t_v3);
-  void Triangulate(LoaderState& t_state, std::vector<Mesh>& t_meshes);
+  void ConstructVertices(LoaderState& t_state, std::vector<Mesh>& t_meshes);
   void CalcTangentSpace(std::vector<Mesh>& t_meshes);
   void JoinIdenticalVertices(std::vector<Mesh>& t_meshes);
   void CombineMeshes(LoaderState& t_state);
