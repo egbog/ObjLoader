@@ -18,9 +18,15 @@ ObjLoader::ObjLoader(const size_t t_maxThreads) : m_maxThreadsUser(t_maxThreads)
  * @param t_flags 
  * @return std::future<Model> of the created task that loads the file
  */
-std::future<obj::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, obj::Flag t_flags) {
+std::future<obj::Model> ObjLoader::LoadFile(const std::filesystem::path& t_path, std::optional<obj::Flag> t_flags) {
   const Timer      cacheTimer;
-  obj::LoaderState state(t_flags);
+  auto flag = obj::Flag::None;
+
+  if (t_flags.has_value()) {
+    flag = t_flags.value();
+  }
+
+  obj::LoaderState state(flag);
 
   std::unordered_map<unsigned int, std::string> mtlBuffers;
   std::unordered_map<unsigned int, std::string> objBuffers;

@@ -26,7 +26,7 @@ public:
   ObjLoader(ObjLoader&& t_other)            = delete;
   //-------------------------------------------------------------------------------------------------------------------
 
-  std::future<obj::Model> LoadFile(const std::filesystem::path& t_path, obj::Flag t_flags);
+  std::future<obj::Model> LoadFile(const std::filesystem::path& t_path, std::optional<obj::Flag> t_flags = std::nullopt);
 
   [[nodiscard]] constexpr size_t WorkerCount() const { return m_threadPool.ThreadCount(); }
 
