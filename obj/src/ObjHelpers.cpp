@@ -467,12 +467,14 @@ namespace obj
 
         const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
 
-        v0.tangent += glm::vec4(tangent, 0.0f);
-        bitangents[i] += bitangent;
-        v1.tangent += glm::vec4(tangent, 0.0f);
-        bitangents[i + 1] += bitangent;
-        v2.tangent += glm::vec4(tangent, 0.0f);
-        bitangents[i + 2] += bitangent;
+        const float area = glm::length(glm::cross(v1.position - v0.position, v2.position - v0.position)) * 0.5f;
+
+        v0.tangent += glm::vec4(tangent, 0.0f) * area;
+        bitangents[mesh.indices[i]] += bitangent * area;
+        v1.tangent += glm::vec4(tangent, 0.0f) * area;
+        bitangents[mesh.indices[i + 1]] += bitangent * area;
+        v2.tangent += glm::vec4(tangent, 0.0f) * area;
+        bitangents[mesh.indices[i + 2]] += bitangent * area;
       }
 
       for (size_t i = 0; i < mesh.vertices.size(); ++i) {
@@ -500,6 +502,8 @@ namespace obj
       }
 
       std::unordered_map<Vertex, unsigned int, VertexHasher, VertexEqual> uniqueVertices;
+      uniqueVertices.reserve(mesh.vertices.size());
+
       std::vector<unsigned int> newIndices;
       newIndices.reserve(mesh.indices.size());
 

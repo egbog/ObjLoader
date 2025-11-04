@@ -114,13 +114,14 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
       obj::Triangulate(t_state, meshes);
     }
 
+    if ((t_state.flags & obj::Flag::JoinIdentical) == obj::Flag::JoinIdentical) {
+      obj::JoinIdenticalVertices(meshes);
+    }
+
     if ((t_state.flags & obj::Flag::CalculateTangents) == obj::Flag::CalculateTangents) {
       obj::CalcTangentSpace(meshes);
     }
 
-    if ((t_state.flags & obj::Flag::JoinIdentical) == obj::Flag::JoinIdentical) {
-      obj::JoinIdenticalVertices(meshes);
-    }
   }
 
   if ((t_state.flags & obj::Flag::CombineMeshes) == obj::Flag::CombineMeshes) {
