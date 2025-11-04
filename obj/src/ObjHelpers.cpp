@@ -96,11 +96,11 @@ namespace obj
   }
 
   const char* ParseFloat(const char* t_ptr, const char* t_end, float& t_out) {
-    auto r = fast_float::from_chars(t_ptr, t_end, t_out, fast_float::chars_format::skip_white_space);
-    if (r.ec != std::errc{}) {
+    auto [ptr, ec] = fast_float::from_chars(t_ptr, t_end, t_out, fast_float::chars_format::skip_white_space);
+    if (ec != std::errc{}) {
       throw std::runtime_error("OBJ parse error: invalid float");
     }
-    return r.ptr;
+    return ptr;
   }
 
   /*!
