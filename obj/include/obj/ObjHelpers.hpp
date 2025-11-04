@@ -156,11 +156,10 @@ namespace obj
   enum class Flag : uint8_t
   {
     None              = 0,
-    Triangulate       = 1 << 0,
-    CalculateTangents = 1 << 1,
-    JoinIdentical     = 1 << 2,
-    CombineMeshes     = 1 << 3,
-    Lods              = 1 << 4
+    CalculateTangents = 1 << 0,
+    JoinIdentical     = 1 << 1,
+    CombineMeshes     = 1 << 2,
+    Lods              = 1 << 3
   };
 
   // Enable bitwise operations for the enum
