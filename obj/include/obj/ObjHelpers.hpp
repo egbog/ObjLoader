@@ -31,18 +31,15 @@ namespace obj
     glm::vec2 texCoords;
     glm::vec4 tangent;
 
-    [[nodiscard]] static bool VecEqual(const glm::vec3& t_x, const glm::vec3& t_y) {
-      return glm::all(glm::lessThan(glm::abs(t_x - t_y), glm::vec3(1e-6f)));
-    }
-
-    [[nodiscard]] static bool Vec2Equal(const glm::vec2& t_x, const glm::vec2& t_y) {
-      return glm::all(glm::lessThan(glm::abs(t_x - t_y), glm::vec2(1e-6f)));
+    template <typename T>
+    [[nodiscard]] static constexpr bool VecEqual(const T& t_x, const T& t_y) {
+      return glm::all(glm::lessThan(glm::abs(t_x - t_y), T(1e-6f)));
     }
 
     // == operator override for calculateTriangle
     bool operator==(const Vertex& t_other) const {
-      return VecEqual(position, t_other.position) && VecEqual(normal, t_other.normal) && Vec2Equal(texCoords, t_other.texCoords)
-        && VecEqual(tangent, t_other.tangent) && std::abs(tangent.w - t_other.tangent.w) < 1e-6f;
+      return VecEqual(position, t_other.position) && VecEqual(normal, t_other.normal) && VecEqual(texCoords, t_other.texCoords) &&
+        VecEqual(tangent, t_other.tangent) && std::abs(tangent.w - t_other.tangent.w) < 1e-6f;
     }
 
     bool operator!=(const Vertex& t_other) const {
