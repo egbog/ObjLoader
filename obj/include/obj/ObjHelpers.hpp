@@ -146,6 +146,8 @@ namespace obj
     std::map<unsigned int, std::vector<Mesh>> meshes;
     std::vector<Mesh>     combinedMeshes;
     std::filesystem::path path;
+    size_t              baseVertex = 0;
+    size_t              baseIndex  = 0;
   };
 
   enum class Flag : uint8_t

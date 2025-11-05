@@ -477,6 +477,11 @@ namespace obj
         // store the indice of each triangle we create
         t_meshes[a].indices.emplace_back(i);
       }
+
+      if (a > 0) {
+        t_meshes[a].baseVertex = t_meshes[a - 1].vertices.size();
+        t_meshes[a].baseIndex = t_meshes[a - 1].indices.size();
+      }
     }
   }
 
