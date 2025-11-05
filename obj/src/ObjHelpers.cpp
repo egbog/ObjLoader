@@ -542,22 +542,22 @@ namespace obj
    * @param t_meshes List of meshes to deduplicate
    */
   void JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
-    for (auto& mesh : t_meshes) {
-      if (mesh.vertices.empty()) {
+    for (unsigned int i = 0; i < t_meshes.size(); ++i) {
+      if (t_meshes[i].vertices.empty()) {
         continue;
       }
 
       std::unordered_map<Vertex, unsigned int, VertexHasher, VertexEqual> uniqueVertices;
-      uniqueVertices.reserve(mesh.vertices.size());
+      uniqueVertices.reserve(t_meshes[i].vertices.size());
 
       std::vector<unsigned int> newIndices;
-      newIndices.reserve(mesh.indices.size());
+      newIndices.reserve(t_meshes[i].indices.size());
 
       std::vector<Vertex> newVertices;
-      newVertices.reserve(mesh.indices.size());
+      newVertices.reserve(t_meshes[i].indices.size());
 
-      for (const auto idx : mesh.indices) {
-        const Vertex& v  = mesh.vertices[idx];
+      for (const auto idx : t_meshes[i].indices) {
+        const Vertex& v  = t_meshes[i].vertices[idx];
         auto          it = uniqueVertices.find(v);
 
         if (it == uniqueVertices.end()) {
@@ -571,8 +571,14 @@ namespace obj
         }
       }
 
-      mesh.indices.swap(newIndices);
-      mesh.vertices.swap(newVertices);
+      t_meshes[i].indices.swap(newIndices);
+      t_meshes[i].vertices.swap(newVertices);
+
+      // update offsets
+      if (i > 0) {
+        t_meshes[i].baseVertex = t_meshes[i - 1].vertices.size();
+        t_meshes[i].baseIndex = t_meshes[i - 1].indices.size();
+      }
 
       //const size_t              n = mesh.vertices.size();
       //std::vector<unsigned int> indexMap(n);
