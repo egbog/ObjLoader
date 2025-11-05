@@ -66,7 +66,7 @@ obj::Model ObjLoader::ConstructTask(const obj::LoaderState&                     
                                     const std::unordered_map<unsigned int, std::string>& t_objBuffers,
                                     const std::unordered_map<unsigned int, std::string>& t_mtlBuffers,
                                     const std::chrono::duration<double, std::milli>      t_cacheElapsed,
-                                    unsigned int                                         t_taskNumber) {
+                                    unsigned int                                         t_taskNumber) const {
   std::string        log;
   std::ostringstream id;
   id << std::this_thread::get_id();
@@ -135,5 +135,5 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
     obj::CombineMeshes(t_state);
   }
 
-  return obj::Model(t_state.meshes, t_state.combinedMeshes, t_state.path);
+  return obj::Model(t_state);
 }

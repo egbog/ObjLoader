@@ -125,27 +125,6 @@ namespace obj
 
     std::vector<Vertex> vertices; // this is fine as an AoS, we access the whole struct at any given time
     Indices             indices;
-  };
-
-  struct Model
-  {
-    //-------------------------------------------------------------------------------------------------------------------
-    // Constructors/operators
-    explicit Model(std::map<unsigned int, std::vector<Mesh>>& t_meshes,
-                   std::vector<Mesh>& t_combinedMeshes,
-                   std::filesystem::path t_path) : meshes(std::move(t_meshes)), combinedMeshes(std::move(t_combinedMeshes)),
-                                                   path(std::move(t_path)) {}
-
-    ~Model()                           = default;
-    Model(const Model&)                = delete;
-    Model(Model&&) noexcept            = default;
-    Model& operator=(const Model&)     = delete;
-    Model& operator=(Model&&) noexcept = default;
-    //-------------------------------------------------------------------------------------------------------------------
-
-    std::map<unsigned int, std::vector<Mesh>> meshes;
-    std::vector<Mesh>     combinedMeshes;
-    std::filesystem::path path;
     size_t              baseVertex = 0;
     size_t              baseIndex  = 0;
   };
@@ -197,6 +176,26 @@ namespace obj
     std::map<unsigned int, std::vector<Material>> materials;      // interim .mtl materials, discarded
     std::vector<TempMeshes>                       tempMeshes;     // interim storage, discarded
   };
+
+  struct Model
+  {
+    //-------------------------------------------------------------------------------------------------------------------
+    // Constructors/operators
+    explicit Model(LoaderState& t_state) : meshes(std::move(t_state.meshes)), combinedMeshes(std::move(t_state.combinedMeshes)),
+                                           path(std::move(t_state.path)) {}
+
+    ~Model()                           = default;
+    Model(const Model&)                = delete;
+    Model(Model&&) noexcept            = default;
+    Model& operator=(const Model&)     = delete;
+    Model& operator=(Model&&) noexcept = default;
+    //-------------------------------------------------------------------------------------------------------------------
+
+    std::map<unsigned int, std::vector<Mesh>> meshes;
+    std::vector<Mesh>                         combinedMeshes;
+    std::filesystem::path                     path;
+  };
+
 
   std::string ReadFileToBuffer(const std::filesystem::path& t_path);
   void CacheFilePaths(LoaderState& t_state);

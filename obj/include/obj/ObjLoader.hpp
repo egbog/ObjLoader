@@ -40,7 +40,7 @@ private:
                            const std::unordered_map<unsigned int, std::string>& t_objBuffers,
                            const std::unordered_map<unsigned int, std::string>& t_mtlBuffers,
                            std::chrono::duration<double, std::milli>            t_cacheElapsed,
-                           unsigned int                                         t_taskNumber);
+                           unsigned int                                         t_taskNumber) const;
   static obj::Model LoadFileInternal(obj::LoaderState&                                    t_state,
                                      const std::unordered_map<unsigned int, std::string>& t_objBuffer,
                                      const std::unordered_map<unsigned int, std::string>& t_mtlBuffer);
