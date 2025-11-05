@@ -231,10 +231,11 @@ namespace obj
 
         ptr = ParseFloat(ptr, ptrEnd, x);
         ptr = ParseFloat(ptr, ptrEnd, y);
+
         t_state.tempMeshes[meshCount].texCoords.emplace_back(x, 1.0 - y);
 
-        uvMin = glm::min(uvMin, x);
-        uvMax = glm::max(uvMax, 1.0f - y);
+        uvMin = glm::min(uvMin, {x, y});
+        uvMax = glm::max(uvMax, {x, y});
       }
       else if (line.starts_with("vn")) {
         const char* ptr    = line.data() + 2;
@@ -260,8 +261,8 @@ namespace obj
         }
 
         // reset uv count
-        uvMax = glm::vec2(FLT_MAX);
-        uvMin = glm::vec2(FLT_MIN);
+        uvMax = glm::vec2(-FLT_MAX);
+        uvMin = glm::vec2(FLT_MAX);
 
         mtlCount++;
       }
