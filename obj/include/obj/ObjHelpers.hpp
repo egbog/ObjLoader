@@ -22,6 +22,7 @@ namespace obj
     std::string normalName;
     std::string heightName;
     bool        isTiled;
+    unsigned int index;
   };
 
   struct Vertex
@@ -128,8 +129,6 @@ namespace obj
 
     size_t baseVertex = 0;
     size_t baseIndex  = 0;
-
-    unsigned int materialIndex = 0;
   };
 
   enum class Flag : uint8_t

@@ -259,7 +259,7 @@ namespace obj
           if (mat.name == name) {
             meshes[meshCount].material         = mat;
             meshes[meshCount].material.isTiled = isTiled;
-            meshes[meshCount].materialIndex = mtlCount;
+            meshes[meshCount].material.index = mtlCount;
           }
         }
 
