@@ -110,7 +110,7 @@ namespace obj
    * @param t_lodLevel Specified lod level, if any
    */
   void ParseObj(LoaderState& t_state, const std::string& t_buffer, const unsigned int t_lodLevel) {
-    std::vector<obj::Mesh>& meshes = obj::GetMeshContainer(t_state, t_lodLevel);
+    std::vector<Mesh>& meshes = GetMeshContainer(t_state, t_lodLevel);
 
     int meshCount = -1;
 
@@ -259,6 +259,7 @@ namespace obj
           if (mat.name == name) {
             meshes[meshCount].material         = mat;
             meshes[meshCount].material.isTiled = isTiled;
+            meshes[meshCount].materialIndex = mtlCount;
           }
         }
 

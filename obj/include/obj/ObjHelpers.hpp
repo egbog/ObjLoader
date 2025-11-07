@@ -125,8 +125,11 @@ namespace obj
 
     std::vector<Vertex> vertices; // this is fine as an AoS, we access the whole struct at any given time
     Indices             indices;
-    size_t              baseVertex = 0;
-    size_t              baseIndex  = 0;
+
+    size_t baseVertex = 0;
+    size_t baseIndex  = 0;
+
+    unsigned int materialIndex = 0;
   };
 
   enum class Flag : uint8_t
