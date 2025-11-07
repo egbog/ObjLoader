@@ -109,7 +109,9 @@ namespace obj
    * @param t_buffer String buffer of current file
    * @param t_lodLevel Specified lod level, if any
    */
-  void ParseObj(LoaderState& t_state, std::vector<Mesh>& t_meshes, const std::string& t_buffer, const unsigned int t_lodLevel) {
+  void ParseObj(LoaderState& t_state, const std::string& t_buffer, const unsigned int t_lodLevel) {
+    std::vector<obj::Mesh>& meshes = obj::GetMeshContainer(t_state, t_lodLevel);
+
     int meshCount = -1;
 
     const char* data = t_buffer.data();
@@ -167,7 +169,7 @@ namespace obj
 
     // Pre-reserve tempMeshes and meshes vectors
     t_state.tempMeshes.reserve(meshEstimate);
-    t_meshes.reserve(meshEstimate);
+    meshes.reserve(meshEstimate);
 
     // --- Second pass: actual parsing ---
     data = t_buffer.data();
@@ -201,7 +203,7 @@ namespace obj
         meshCount++;
 
         t_state.tempMeshes.emplace_back();
-        t_meshes.emplace_back();
+        meshes.emplace_back();
         indexOffset = maxIndexSeen; // carry forward for next mesh
 
         // Pre-reserve per-mesh vectors based on first-pass counts
@@ -212,9 +214,9 @@ namespace obj
           t_state.tempMeshes[meshCount].faceIndices.reserve(facesPerMesh[meshCount] * 3); // 3 indices per face
         }
 
-        t_meshes[meshCount].name       = meshName;
-        t_meshes[meshCount].meshNumber = meshCount;
-        t_meshes[meshCount].lodLevel   = t_lodLevel;
+        meshes[meshCount].name       = meshName;
+        meshes[meshCount].meshNumber = meshCount;
+        meshes[meshCount].lodLevel   = t_lodLevel;
       }
       else if (line.starts_with("v ")) {
         const char* ptr    = line.data() + 2;
@@ -255,8 +257,8 @@ namespace obj
         // pull texture names from cached mtl data and construct ordered mesh materials
         for (auto& mat : t_state.materials[t_lodLevel]) {
           if (mat.name == name) {
-            t_meshes[meshCount].material = mat;
-            t_meshes[meshCount].material.isTiled = isTiled;
+            meshes[meshCount].material         = mat;
+            meshes[meshCount].material.isTiled = isTiled;
           }
         }
 
@@ -464,166 +466,183 @@ namespace obj
   /*!
    * @brief Converts polygonal face data from the temporary loader state into fully defined triangles, populating each mesh with vertices and indices.
    * @param t_state Internal state data used to grab vertex, normal, and texture coordinate data from temporary containers.
-   * @param t_meshes List of meshes to populate with triangulated vertex and index data.
    */
-  void ConstructVertices(LoaderState& t_state, std::vector<Mesh>& t_meshes) {
-    for (unsigned int a = 0; a < t_meshes.size(); ++a) {
-      for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
-        // fetch each triangle from our face indices
-        t_meshes[a].vertices.emplace_back(
-          t_state.tempMeshes[a].vertices[t_state.tempMeshes[a].faceIndices[i].x],
-          t_state.tempMeshes[a].normals[t_state.tempMeshes[a].faceIndices[i].z],
-          t_state.tempMeshes[a].texCoords[t_state.tempMeshes[a].faceIndices[i].y]);
-        // store the indice of each triangle we create
-        t_meshes[a].indices.emplace_back(i);
-      }
+  void ConstructVertices(LoaderState& t_state) {
+    unsigned int baseVertex = 0;
+    unsigned int baseIndex  = 0;
 
-      if (a > 0) {
-        t_meshes[a].baseVertex = t_meshes[a - 1].vertices.size();
-        t_meshes[a].baseIndex = t_meshes[a - 1].indices.size();
+    for (auto& meshes : t_state.meshes | std::views::values) {
+      for (unsigned int a = 0; a < meshes.size(); ++a) {
+        for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
+          // fetch each triangle from our face indices
+          meshes[a].vertices.emplace_back(
+            t_state.tempMeshes[a].vertices[t_state.tempMeshes[a].faceIndices[i].x],
+            t_state.tempMeshes[a].normals[t_state.tempMeshes[a].faceIndices[i].z],
+            t_state.tempMeshes[a].texCoords[t_state.tempMeshes[a].faceIndices[i].y]);
+          // store the indice of each triangle we create
+          meshes[a].indices.emplace_back(i);
+        }
+
+        meshes[a].baseVertex = baseVertex;
+        meshes[a].baseIndex  = baseIndex;
+
+        baseVertex += meshes[a].vertices.size();
+        baseIndex += meshes[a].indices.size();
       }
     }
   }
 
   /*!
    * @brief Calculates per-vertex tangent and bitangent vectors for all meshes, used in tangent-space normal mapping. Accumulates contributions from each face and normalizes the results.
-   * @param t_meshes List of meshes to process and update with tangent space data.
+   * @param t_state
    */
-  void CalcTangentSpace(std::vector<Mesh>& t_meshes) {
-    for (auto& mesh : t_meshes) {
-      std::vector bitangents(mesh.vertices.size(), glm::vec3(0.0f));
+  void CalcTangentSpace(LoaderState& t_state) {
+    for (auto& meshes : t_state.meshes | std::views::values) {
+      for (auto& mesh : meshes) {
+        std::vector bitangents(mesh.vertices.size(), glm::vec3(0.0f));
 
-      // accumulate
-      for (size_t i = 0; i < mesh.indices.size(); i += 3) {
-        Vertex& v0 = mesh.vertices[mesh.indices[i]];
-        Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
-        Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
+        // accumulate
+        for (size_t i = 0; i < mesh.indices.size(); i += 3) {
+          Vertex& v0 = mesh.vertices[mesh.indices[i]];
+          Vertex& v1 = mesh.vertices[mesh.indices[i + 1]];
+          Vertex& v2 = mesh.vertices[mesh.indices[i + 2]];
 
-        const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
+          const auto&& [tangent, bitangent] = GetTangentCoords(v0, v1, v2);
 
-        const float lenT = glm::length(tangent);
-        const float lenB = glm::length(bitangent);
+          const float lenT = glm::length(tangent);
+          const float lenB = glm::length(bitangent);
 
-        // skip degenerate tri
-        if (!std::isfinite(lenT) || lenT < 1e-10f || !std::isfinite(lenB) || lenB < 1e-10f) {
-          continue;
+          // skip degenerate tri
+          if (!std::isfinite(lenT) || lenT < 1e-10f || !std::isfinite(lenB) || lenB < 1e-10f) {
+            continue;
+          }
+
+          const float area = glm::length(glm::cross(v1.position - v0.position, v2.position - v0.position)) * 0.5f;
+
+          v0.tangent += glm::vec4(tangent, 0.0f) * area;
+          bitangents[mesh.indices[i]] += bitangent * area;
+          v1.tangent += glm::vec4(tangent, 0.0f) * area;
+          bitangents[mesh.indices[i + 1]] += bitangent * area;
+          v2.tangent += glm::vec4(tangent, 0.0f) * area;
+          bitangents[mesh.indices[i + 2]] += bitangent * area;
         }
 
-        const float area = glm::length(glm::cross(v1.position - v0.position, v2.position - v0.position)) * 0.5f;
+        for (size_t i = 0; i < mesh.vertices.size(); ++i) {
+          auto& v = mesh.vertices[i];
 
-        v0.tangent += glm::vec4(tangent, 0.0f) * area;
-        bitangents[mesh.indices[i]] += bitangent * area;
-        v1.tangent += glm::vec4(tangent, 0.0f) * area;
-        bitangents[mesh.indices[i + 1]] += bitangent * area;
-        v2.tangent += glm::vec4(tangent, 0.0f) * area;
-        bitangents[mesh.indices[i + 2]] += bitangent * area;
-      }
+          glm::vec3 t(1, 0, 0);
 
-      for (size_t i = 0; i < mesh.vertices.size(); ++i) {
-        auto& v = mesh.vertices[i];
+          if (glm::length(v.tangent) > 1e-10f) {
+            // Gram-Schmidt orthogonalize
+            t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
+          }
 
-        glm::vec3 t(1, 0, 0);
+          // Handedness from unnormalized bitangent
+          const float handedness = (glm::dot(glm::cross(v.normal, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
 
-        if (glm::length(v.tangent) > 1e-10f) {
-          // Gram-Schmidt orthogonalize
-          t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
+          v.tangent = glm::vec4(t, handedness);
         }
-
-        // Handedness from unnormalized bitangent
-        const float handedness = (glm::dot(glm::cross(v.normal, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
-
-        v.tangent = glm::vec4(t, handedness);
       }
     }
   }
 
   /*!
    * @brief Deduplicates vertices with identical pos, uv and normal data
-   * @param t_meshes List of meshes to deduplicate
+   * @param t_state
    */
-  void JoinIdenticalVertices(std::vector<Mesh>& t_meshes) {
-    for (unsigned int i = 0; i < t_meshes.size(); ++i) {
-      if (t_meshes[i].vertices.empty()) {
-        continue;
-      }
+  void JoinIdenticalVertices(LoaderState& t_state) {
+    unsigned int baseVertex = 0;
+    unsigned int baseIndex  = 0;
 
-      std::unordered_map<Vertex, unsigned int, VertexHasher, VertexEqual> uniqueVertices;
-      uniqueVertices.reserve(t_meshes[i].vertices.size());
-
-      std::vector<unsigned int> newIndices;
-      newIndices.reserve(t_meshes[i].indices.size());
-
-      std::vector<Vertex> newVertices;
-      newVertices.reserve(t_meshes[i].indices.size());
-
-      for (const auto idx : t_meshes[i].indices) {
-        const Vertex& v  = t_meshes[i].vertices[idx];
-        auto          it = uniqueVertices.find(v);
-
-        if (it == uniqueVertices.end()) {
-          const unsigned int newIndex = static_cast<unsigned int>(newVertices.size());
-          uniqueVertices.emplace(v, newIndex);
-          newVertices.push_back(v);
-          newIndices.push_back(newIndex);
+    for (auto& meshes : t_state.meshes | std::views::values) {
+      for (auto& mesh : meshes) {
+        if (mesh.vertices.empty()) {
+          continue;
         }
-        else {
-          newIndices.push_back(it->second);
+
+        std::unordered_map<Vertex, unsigned int, VertexHasher, VertexEqual> uniqueVertices;
+        uniqueVertices.reserve(mesh.vertices.size());
+
+        std::vector<unsigned int> newIndices;
+        newIndices.reserve(mesh.indices.size());
+
+        std::vector<Vertex> newVertices;
+        newVertices.reserve(mesh.indices.size());
+
+        for (const auto idx : mesh.indices) {
+          const Vertex& v  = mesh.vertices[idx];
+          auto          it = uniqueVertices.find(v);
+
+          if (it == uniqueVertices.end()) {
+            const unsigned int newIndex = static_cast<unsigned int>(newVertices.size());
+            uniqueVertices.emplace(v, newIndex);
+            newVertices.push_back(v);
+            newIndices.push_back(newIndex);
+          }
+          else {
+            newIndices.push_back(it->second);
+          }
         }
+
+        mesh.indices.swap(newIndices);
+        mesh.vertices.swap(newVertices);
+
+        // update offsets
+        mesh.baseVertex = baseVertex;
+        mesh.baseIndex  = baseIndex;
+
+        baseVertex += mesh.vertices.size();
+        baseIndex += mesh.indices.size();
+
+        //const size_t              n = mesh.vertices.size();
+        //std::vector<unsigned int> indexMap(n);
+        //std::iota(indexMap.begin(), indexMap.end(), 0);
+        //
+        //// Sort indices by vertex value
+        //std::ranges::sort(
+        //  indexMap,
+        //  [&] (const unsigned int t_a, const unsigned int t_b)
+        //  {
+        //    return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
+        //  });
+        //
+        //std::vector<Vertex> newVertices;
+        //newVertices.reserve(n);
+        //std::vector<unsigned int> remap(n);
+        //
+        //// Deduplicate vertices while tracking new index mapping
+        //unsigned int nextIndex = 0;
+        //newVertices.emplace_back(mesh.vertices[indexMap[0]]);
+        //remap[indexMap[0]] = nextIndex;
+        //
+        //for (size_t i = 1; i < n; ++i) {
+        //  const Vertex& curr = mesh.vertices[indexMap[i]];
+        //  const Vertex& prev = mesh.vertices[indexMap[i - 1]];
+        //
+        //  if (curr != prev) {
+        //    ++nextIndex;
+        //    newVertices.emplace_back(curr);
+        //  }
+        //  remap[indexMap[i]] = nextIndex;
+        //}
+        //
+        //for (auto& idx : mesh.indices) {
+        //  idx = remap[idx];
+        //}
+        //
+        //// Resize newVertices to actual number of unique vertices
+        //newVertices.resize(nextIndex + 1);
+        //
+        //// Remap mesh.indices to the deduplicated set
+        //mesh.vertices.swap(newVertices);
       }
-
-      t_meshes[i].indices.swap(newIndices);
-      t_meshes[i].vertices.swap(newVertices);
-
-      // update offsets
-      if (i > 0) {
-        t_meshes[i].baseVertex = t_meshes[i - 1].vertices.size();
-        t_meshes[i].baseIndex = t_meshes[i - 1].indices.size();
-      }
-
-      //const size_t              n = mesh.vertices.size();
-      //std::vector<unsigned int> indexMap(n);
-      //std::iota(indexMap.begin(), indexMap.end(), 0);
-      //
-      //// Sort indices by vertex value
-      //std::ranges::sort(
-      //  indexMap,
-      //  [&] (const unsigned int t_a, const unsigned int t_b)
-      //  {
-      //    return mesh.vertices[t_a] < mesh.vertices[t_b]; // requires operator<
-      //  });
-      //
-      //std::vector<Vertex> newVertices;
-      //newVertices.reserve(n);
-      //std::vector<unsigned int> remap(n);
-      //
-      //// Deduplicate vertices while tracking new index mapping
-      //unsigned int nextIndex = 0;
-      //newVertices.emplace_back(mesh.vertices[indexMap[0]]);
-      //remap[indexMap[0]] = nextIndex;
-      //
-      //for (size_t i = 1; i < n; ++i) {
-      //  const Vertex& curr = mesh.vertices[indexMap[i]];
-      //  const Vertex& prev = mesh.vertices[indexMap[i - 1]];
-      //
-      //  if (curr != prev) {
-      //    ++nextIndex;
-      //    newVertices.emplace_back(curr);
-      //  }
-      //  remap[indexMap[i]] = nextIndex;
-      //}
-      //
-      //for (auto& idx : mesh.indices) {
-      //  idx = remap[idx];
-      //}
-      //
-      //// Resize newVertices to actual number of unique vertices
-      //newVertices.resize(nextIndex + 1);
-      //
-      //// Remap mesh.indices to the deduplicated set
-      //mesh.vertices.swap(newVertices);
     }
   }
 
+  /*!
+   * @brief 
+   * @param t_state 
+   */
   void CombineMeshes(LoaderState& t_state) {
     auto initFrom = [&] (const Mesh& t_src, Mesh& t_dst)
     {

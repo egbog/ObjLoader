@@ -112,23 +112,21 @@ obj::Model ObjLoader::ConstructTask(const obj::LoaderState&                     
 obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                                    t_state,
                                        const std::unordered_map<unsigned int, std::string>& t_objBuffer,
                                        const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
-  // Load obj
+  // Parse all files first
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.filePaths) {
-    std::vector<obj::Mesh>& meshes = obj::GetMeshContainer(t_state, lodLevel);
-
     t_state.tempMeshes.clear();
     obj::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
-    obj::ParseObj(t_state, meshes, t_objBuffer.at(lodLevel), lodLevel);
+    obj::ParseObj(t_state, t_objBuffer.at(lodLevel), lodLevel);
+  }
 
-    obj::ConstructVertices(t_state, meshes);
+  obj::ConstructVertices(t_state);
 
-    if ((t_state.flags & obj::Flag::JoinIdentical) == obj::Flag::JoinIdentical) {
-      obj::JoinIdenticalVertices(meshes);
-    }
+  if ((t_state.flags & obj::Flag::JoinIdentical) == obj::Flag::JoinIdentical) {
+    obj::JoinIdenticalVertices(t_state);
+  }
 
-    if ((t_state.flags & obj::Flag::CalculateTangents) == obj::Flag::CalculateTangents) {
-      obj::CalcTangentSpace(meshes);
-    }
+  if ((t_state.flags & obj::Flag::CalculateTangents) == obj::Flag::CalculateTangents) {
+    obj::CalcTangentSpace(t_state);
   }
 
   if ((t_state.flags & obj::Flag::CombineMeshes) == obj::Flag::CombineMeshes) {
