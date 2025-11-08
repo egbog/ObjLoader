@@ -111,7 +111,8 @@ namespace obj
     // Constructors/operators
     Mesh() = default;
 
-    //Mesh(const std::vector<Vertex>& t_vertices, Indices t_indices) : vertices(t_vertices), indices(std::move(t_indices)) {}
+    Mesh(std::string t_name, const unsigned int t_lodLevel, const int t_meshNumber) : name(std::move(t_name)), material(),
+      lodLevel(t_lodLevel), meshNumber(t_meshNumber) {}
 
     ~Mesh()                              = default;
     Mesh(const Mesh& t_other)            = default;

@@ -648,46 +648,58 @@ namespace obj
    */
   // TODO: simple vector insert, use local mesh indices
   void CombineMeshes(LoaderState& t_state) {
-    auto initFrom = [&] (const Mesh& t_src, Mesh& t_dst)
-    {
-      t_dst.name       = t_src.name;
-      t_dst.material   = t_src.material;
-      t_dst.meshNumber = t_src.meshNumber;
-      t_dst.lodLevel   = t_src.lodLevel;
-    };
-
     for (auto& lod : t_state.meshes | std::views::values) {
-      unsigned int lodLevel   = lod[0].lodLevel;
-      size_t       totalVerts = 0, totalIndices = 0;
-      unsigned int baseVertex = 0;
+      const unsigned int lodLevel   = lod[0].lodLevel;
 
-      t_state.combinedMeshes.emplace_back();
+      t_state.combinedMeshes.emplace_back(t_state.mtlFileName.substr(0, t_state.mtlFileName.length() - 4), lod[0].lodLevel, lod[0].meshNumber);
 
-      initFrom(lod[0], t_state.combinedMeshes[lodLevel]);
-
-      // check size for reserve
       for (auto& mesh : lod) {
-        totalVerts += mesh.vertices.size();
-        totalIndices += mesh.indices.size();
-      }
 
-      t_state.combinedMeshes[lodLevel].vertices.reserve(totalVerts);
-      t_state.combinedMeshes[lodLevel].indices.reserve(totalIndices);
-
-      // combine meshes
-      for (auto& mesh : lod) {
-        // append indices with offset
-        for (const auto idx : mesh.indices) {
-          t_state.combinedMeshes[lodLevel].indices.push_back(idx + baseVertex);
-        }
-
-        t_state.combinedMeshes[lodLevel].vertices.insert(
-          t_state.combinedMeshes[lodLevel].vertices.end(),
-          mesh.vertices.begin(),
-          mesh.vertices.end());
-
-        baseVertex += static_cast<unsigned int>(mesh.vertices.size());
+        t_state.combinedMeshes[lodLevel].vertices.insert(t_state.combinedMeshes[lodLevel].vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
+        t_state.combinedMeshes[lodLevel].indices.insert(t_state.combinedMeshes[lodLevel].indices.end(), mesh.indices.begin(), mesh.indices.end());
       }
     }
+
+
+    //auto initFrom = [&] (const Mesh& t_src, Mesh& t_dst)
+    //{
+    //  t_dst.name       = t_src.name;
+    //  t_dst.material   = t_src.material;
+    //  t_dst.meshNumber = t_src.meshNumber;
+    //  t_dst.lodLevel   = t_src.lodLevel;
+    //};
+    //
+    //for (auto& lod : t_state.meshes | std::views::values) {
+    //  unsigned int lodLevel   = lod[0].lodLevel;
+    //  size_t       totalVerts = 0, totalIndices = 0;
+    //  unsigned int baseVertex = 0;
+    //
+    //  t_state.combinedMeshes.emplace_back();
+    //  initFrom(lod[0], t_state.combinedMeshes[lodLevel]);
+    //
+    //  // check size for reserve
+    //  for (auto& mesh : lod) {
+    //    totalVerts += mesh.vertices.size();
+    //    totalIndices += mesh.indices.size();
+    //  }
+    //
+    //  t_state.combinedMeshes[lodLevel].vertices.reserve(totalVerts);
+    //  t_state.combinedMeshes[lodLevel].indices.reserve(totalIndices);
+    //
+    //  // combine meshes
+    //  for (auto& mesh : lod) {
+    //    // append indices with offset
+    //    for (const auto idx : mesh.indices) {
+    //      t_state.combinedMeshes[lodLevel].indices.push_back(idx + baseVertex);
+    //    }
+    //
+    //    t_state.combinedMeshes[lodLevel].vertices.insert(
+    //      t_state.combinedMeshes[lodLevel].vertices.end(),
+    //      mesh.vertices.begin(),
+    //      mesh.vertices.end());
+    //
+    //    baseVertex += static_cast<unsigned int>(mesh.vertices.size());
+    //  }
+    //}
   }
 }
