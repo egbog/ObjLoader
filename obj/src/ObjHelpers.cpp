@@ -168,7 +168,8 @@ namespace obj
     }
 
     // Pre-reserve tempMeshes and meshes vectors
-    t_state.tempMeshes.reserve(meshEstimate);
+    t_state.tempMeshes[t_lodLevel].reserve(meshEstimate);
+    auto& tempMeshes = t_state.tempMeshes[t_lodLevel];
     meshes.reserve(meshEstimate);
 
     // --- Second pass: actual parsing ---
@@ -202,16 +203,16 @@ namespace obj
         meshName = std::string(line.substr(2));
         meshCount++;
 
-        t_state.tempMeshes.emplace_back();
+        t_state.tempMeshes[t_lodLevel].emplace_back();
         meshes.emplace_back();
         indexOffset = maxIndexSeen; // carry forward for next mesh
 
         // Pre-reserve per-mesh vectors based on first-pass counts
         if (int size = static_cast<int>(verticesPerMesh.size()); meshCount < size) {
-          t_state.tempMeshes[meshCount].vertices.reserve(verticesPerMesh[meshCount]);
-          t_state.tempMeshes[meshCount].texCoords.reserve(texPerMesh[meshCount]);
-          t_state.tempMeshes[meshCount].normals.reserve(normalsPerMesh[meshCount]);
-          t_state.tempMeshes[meshCount].faceIndices.reserve(facesPerMesh[meshCount] * 3); // 3 indices per face
+          tempMeshes[meshCount].vertices.reserve(verticesPerMesh[meshCount]);
+          tempMeshes[meshCount].texCoords.reserve(texPerMesh[meshCount]);
+          tempMeshes[meshCount].normals.reserve(normalsPerMesh[meshCount]);
+          tempMeshes[meshCount].faceIndices.reserve(facesPerMesh[meshCount] * 3); // 3 indices per face
         }
 
         meshes[meshCount].name       = meshName;
@@ -225,7 +226,7 @@ namespace obj
         ptr = ParseFloat(ptr, ptrEnd, x);
         ptr = ParseFloat(ptr, ptrEnd, y);
         ptr = ParseFloat(ptr, ptrEnd, z);
-        t_state.tempMeshes[meshCount].vertices.emplace_back(x, y, z);
+        tempMeshes[meshCount].vertices.emplace_back(x, y, z);
       }
       else if (line.starts_with("vt")) {
         const char* ptr    = line.data() + 2;
@@ -234,7 +235,7 @@ namespace obj
         ptr = ParseFloat(ptr, ptrEnd, x);
         ptr = ParseFloat(ptr, ptrEnd, y);
 
-        t_state.tempMeshes[meshCount].texCoords.emplace_back(x, 1.0 - y);
+        tempMeshes[meshCount].texCoords.emplace_back(x, 1.0 - y);
 
         uvMin = glm::min(uvMin, {x, y});
         uvMax = glm::max(uvMax, {x, y});
@@ -246,7 +247,7 @@ namespace obj
         ptr = ParseFloat(ptr, ptrEnd, x);
         ptr = ParseFloat(ptr, ptrEnd, y);
         ptr = ParseFloat(ptr, ptrEnd, z);
-        t_state.tempMeshes[meshCount].normals.emplace_back(x, y, z);
+        tempMeshes[meshCount].normals.emplace_back(x, y, z);
       }
       else if (line.starts_with("usemtl")) {
         auto name = std::string(line.substr(7));
@@ -259,7 +260,7 @@ namespace obj
           if (mat.name == name) {
             meshes[meshCount].material         = mat;
             meshes[meshCount].material.isTiled = isTiled;
-            meshes[meshCount].material.index = mtlCount;
+            meshes[meshCount].material.index   = mtlCount;
           }
         }
 
@@ -307,21 +308,18 @@ namespace obj
         }
 
         if (faceSize == 3) {
-          t_state.tempMeshes[meshCount].faceIndices.insert(
-            t_state.tempMeshes[meshCount].faceIndices.end(),
-            face.begin(),
-            face.begin() + 3);
+          tempMeshes[meshCount].faceIndices.insert(tempMeshes[meshCount].faceIndices.end(), face.begin(), face.begin() + 3);
         }
         // triangulate
         else if (faceSize == 4) {
           // Split along v0 → v2 diagonal
-          t_state.tempMeshes[meshCount].faceIndices.push_back(face[0]);
-          t_state.tempMeshes[meshCount].faceIndices.push_back(face[1]);
-          t_state.tempMeshes[meshCount].faceIndices.push_back(face[2]);
+          tempMeshes[meshCount].faceIndices.push_back(face[0]);
+          tempMeshes[meshCount].faceIndices.push_back(face[1]);
+          tempMeshes[meshCount].faceIndices.push_back(face[2]);
 
-          t_state.tempMeshes[meshCount].faceIndices.push_back(face[0]);
-          t_state.tempMeshes[meshCount].faceIndices.push_back(face[2]);
-          t_state.tempMeshes[meshCount].faceIndices.push_back(face[3]);
+          tempMeshes[meshCount].faceIndices.push_back(face[0]);
+          tempMeshes[meshCount].faceIndices.push_back(face[2]);
+          tempMeshes[meshCount].faceIndices.push_back(face[3]);
         }
       }
     }
@@ -471,15 +469,19 @@ namespace obj
   void ConstructVertices(LoaderState& t_state) {
     unsigned int baseVertex = 0;
     unsigned int baseIndex  = 0;
+    unsigned int lodLevel   = 0;
 
     for (auto& meshes : t_state.meshes | std::views::values) {
       for (unsigned int a = 0; a < meshes.size(); ++a) {
-        for (unsigned int i = 0; i < t_state.tempMeshes[a].faceIndices.size(); ++i) {
+        lodLevel             = meshes[a].lodLevel;
+        TempMeshes& tempMesh = t_state.tempMeshes[lodLevel][a];
+
+        for (unsigned int i = 0; i < t_state.tempMeshes[lodLevel][a].faceIndices.size(); ++i) {
           // fetch each triangle from our face indices
           meshes[a].vertices.emplace_back(
-            t_state.tempMeshes[a].vertices[t_state.tempMeshes[a].faceIndices[i].x],
-            t_state.tempMeshes[a].normals[t_state.tempMeshes[a].faceIndices[i].z],
-            t_state.tempMeshes[a].texCoords[t_state.tempMeshes[a].faceIndices[i].y]);
+            tempMesh.vertices[tempMesh.faceIndices[i].x],
+            tempMesh.normals[tempMesh.faceIndices[i].z],
+            tempMesh.texCoords[tempMesh.faceIndices[i].y]);
           // store the indice of each triangle we create
           meshes[a].indices.emplace_back(i);
         }
@@ -644,6 +646,7 @@ namespace obj
    * @brief 
    * @param t_state 
    */
+  // TODO: simple vector insert, use local mesh indices
   void CombineMeshes(LoaderState& t_state) {
     auto initFrom = [&] (const Mesh& t_src, Mesh& t_dst)
     {

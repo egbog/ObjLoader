@@ -16,12 +16,12 @@ namespace obj
 
   struct Material
   {
-    std::string name;
-    std::string diffuseName;
-    std::string specularName;
-    std::string normalName;
-    std::string heightName;
-    bool        isTiled;
+    std::string  name;
+    std::string  diffuseName;
+    std::string  specularName;
+    std::string  normalName;
+    std::string  heightName;
+    bool         isTiled;
     unsigned int index;
   };
 
@@ -172,11 +172,11 @@ namespace obj
     std::string           mtlFileName;
     Flag                  flags;
 
-    std::vector<File>                             filePaths;      // interim file paths, discarded
-    std::map<unsigned int, std::vector<Mesh>>     meshes;         // final calculated meshes, moved
-    std::vector<Mesh>                             combinedMeshes; // final combined meshes, moved
-    std::map<unsigned int, std::vector<Material>> materials;      // interim .mtl materials, discarded
-    std::vector<TempMeshes>                       tempMeshes;     // interim storage, discarded
+    std::vector<File>                               filePaths;      // interim file paths, discarded
+    std::map<unsigned int, std::vector<Mesh>>       meshes;         // final calculated meshes, moved
+    std::vector<Mesh>                               combinedMeshes; // final combined meshes, moved
+    std::map<unsigned int, std::vector<Material>>   materials;      // interim .mtl materials, discarded
+    std::map<unsigned int, std::vector<TempMeshes>> tempMeshes;     // interim storage, discarded
   };
 
   struct Model

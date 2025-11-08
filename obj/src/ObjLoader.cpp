@@ -114,7 +114,6 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
                                        const std::unordered_map<unsigned int, std::string>& t_mtlBuffer) {
   // Parse all files first
   for (const auto& [objPath, mtlPath, lodLevel] : t_state.filePaths) {
-    t_state.tempMeshes.clear();
     obj::ParseMtl(t_state, t_mtlBuffer.at(lodLevel), lodLevel);
     obj::ParseObj(t_state, t_objBuffer.at(lodLevel), lodLevel);
   }
