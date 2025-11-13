@@ -702,4 +702,29 @@ namespace obj
     //  }
     //}
   }
+  
+  void PackNormal_2_10_10_10(LoaderState& t_state)
+  {
+    // Clamp and scale to signed 10-bit range
+    auto clamp10 = [](float t_v) -> int32_t {
+        t_v = glm::clamp(t_v, -1.0f, 1.0f);
+        return static_cast<int32_t>(round(t_v * 511.0f)) & 0x3FF;
+    };
+
+    constexpr uint32_t w = 0; // optional fourth component
+
+    for (auto& meshes : t_state.meshes | std::views::values) {
+      for (auto& mesh : meshes) {
+        for (auto& vert : mesh.vertices) {
+          for (auto& normal : vert.normal) {
+            const uint32_t x = static_cast<uint32_t>(clamp10(normal.x));
+            const uint32_t y = static_cast<uint32_t>(clamp10(normal.y));
+            const uint32_t z = static_cast<uint32_t>(clamp10(normal.z));
+
+            vert.packedNormal = (w << 30) | (z << 20) | (y << 10) | x;
+          }
+        }
+      }
+    }
+  }
 }

@@ -27,10 +27,11 @@ namespace obj
 
   struct Vertex
   {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 texCoords;
-    glm::vec4 tangent;
+    glm::vec3     position;
+    std::uint32_t packedNormal;
+    glm::vec2     texCoords;
+    glm::vec4     tangent;
+    glm::vec3     normal;
 
     template <typename T>
     [[nodiscard]] static constexpr bool VecEqual(const T& t_x, const T& t_y) {
@@ -211,4 +212,5 @@ namespace obj
   void                            CalcTangentSpace(LoaderState& t_state);
   void                            JoinIdenticalVertices(LoaderState& t_state);
   void                            CombineMeshes(LoaderState& t_state);
+  void                            PackNormal_2_10_10_10(LoaderState& t_state);
 }
