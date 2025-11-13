@@ -716,13 +716,11 @@ namespace obj
     for (auto& meshes : t_state.meshes | std::views::values) {
       for (auto& mesh : meshes) {
         for (auto& vert : mesh.vertices) {
-          for (auto& normal : vert.normal) {
-            const uint32_t x = static_cast<uint32_t>(clamp10(normal.x));
-            const uint32_t y = static_cast<uint32_t>(clamp10(normal.y));
-            const uint32_t z = static_cast<uint32_t>(clamp10(normal.z));
+          const uint32_t x = static_cast<uint32_t>(clamp10(vert.normal.x));
+          const uint32_t y = static_cast<uint32_t>(clamp10(vert.normal.y));
+          const uint32_t z = static_cast<uint32_t>(clamp10(vert.normal.z));
 
-            vert.packedNormal = (w << 30) | (z << 20) | (y << 10) | x;
-          }
+          vert.packedNormal = (w << 30) | (z << 20) | (y << 10) | x;
         }
       }
     }
