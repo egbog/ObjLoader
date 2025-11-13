@@ -481,6 +481,7 @@ namespace obj
           meshes[a].vertices.emplace_back(
             tempMesh.vertices[tempMesh.faceIndices[i].x],
             tempMesh.normals[tempMesh.faceIndices[i].z],
+            0,
             tempMesh.texCoords[tempMesh.faceIndices[i].y]);
           // store the indice of each triangle we create
           meshes[a].indices.emplace_back(i);

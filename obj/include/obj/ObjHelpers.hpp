@@ -28,10 +28,10 @@ namespace obj
   struct Vertex
   {
     glm::vec3     position;
+    glm::vec3     normal;
     std::uint32_t packedNormal;
     glm::vec2     texCoords;
     glm::vec4     tangent;
-    glm::vec3     normal;
 
     template <typename T>
     [[nodiscard]] static constexpr bool VecEqual(const T& t_x, const T& t_y) {
