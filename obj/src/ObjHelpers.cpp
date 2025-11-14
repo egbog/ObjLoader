@@ -533,15 +533,17 @@ namespace obj
         for (size_t i = 0; i < mesh.vertices.size(); ++i) {
           auto& v = mesh.vertices[i];
 
+          glm::vec3 n = Vertex::UnpackNormal_2_10_10_10_REV(v.packedNormal);
+
           glm::vec3 t(1, 0, 0);
 
           if (glm::length(v.tangent) > 1e-10f) {
             // Gram-Schmidt orthogonalize
-            t = glm::normalize(glm::vec3(v.tangent) - v.normal * glm::dot(v.normal, glm::vec3(v.tangent)));
+            t = glm::normalize(glm::vec3(v.tangent) - n * glm::dot(n, glm::vec3(v.tangent)));
           }
 
           // Handedness from unnormalized bitangent
-          const float handedness = (glm::dot(glm::cross(v.normal, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
+          const float handedness = (glm::dot(glm::cross(n, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
 
           v.tangent = glm::vec4(t, handedness);
         }
@@ -701,28 +703,5 @@ namespace obj
     //    baseVertex += static_cast<unsigned int>(mesh.vertices.size());
     //  }
     //}
-  }
-  
-  void PackNormal_2_10_10_10(LoaderState& t_state)
-  {
-    // Clamp and scale to signed 10-bit range
-    auto clamp10 = [](float t_v) -> int32_t {
-        t_v = glm::clamp(t_v, -1.0f, 1.0f);
-        return static_cast<int32_t>(round(t_v * 511.0f)) & 0x3FF;
-    };
-
-    constexpr uint32_t w = 0; // optional fourth component
-
-    for (auto& meshes : t_state.meshes | std::views::values) {
-      for (auto& mesh : meshes) {
-        for (auto& vert : mesh.vertices) {
-          const uint32_t x = static_cast<uint32_t>(clamp10(vert.normal.x));
-          const uint32_t y = static_cast<uint32_t>(clamp10(vert.normal.y));
-          const uint32_t z = static_cast<uint32_t>(clamp10(vert.normal.z));
-
-          vert.packedNormal = (w << 30) | (z << 20) | (y << 10) | x;
-        }
-      }
-    }
   }
 }

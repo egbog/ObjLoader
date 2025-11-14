@@ -132,7 +132,5 @@ obj::Model ObjLoader::LoadFileInternal(obj::LoaderState&                        
     obj::CombineMeshes(t_state);
   }
 
-  obj::PackNormal_2_10_10_10(t_state);
-
   return obj::Model(t_state);
 }
