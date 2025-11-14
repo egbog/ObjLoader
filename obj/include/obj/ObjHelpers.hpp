@@ -27,6 +27,10 @@ namespace obj
 
   struct Vertex
   {
+    Vertex(const glm::vec3& t_pos, const glm::vec3& t_norm, const glm::vec2& t_uv) : position(t_pos), normal(t_norm),
+                                                                                     packedNormal(0), texCoords(t_uv),
+                                                                                     tangent() {}
+
     glm::vec3     position;
     glm::vec3     normal;
     std::uint32_t packedNormal;
