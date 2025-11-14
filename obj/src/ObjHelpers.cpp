@@ -651,14 +651,22 @@ namespace obj
   // TODO: simple vector insert, use local mesh indices
   void CombineMeshes(LoaderState& t_state) {
     for (auto& lod : t_state.meshes | std::views::values) {
-      const unsigned int lodLevel   = lod[0].lodLevel;
+      const unsigned int lodLevel = lod[0].lodLevel;
 
-      t_state.combinedMeshes.emplace_back(t_state.mtlFileName.substr(0, t_state.mtlFileName.length() - 4), lod[0].lodLevel, lod[0].meshNumber);
+      t_state.combinedMeshes.emplace_back(
+        t_state.mtlFileName.substr(0, t_state.mtlFileName.length() - 4),
+        lod[0].lodLevel,
+        lod[0].meshNumber);
 
       for (auto& mesh : lod) {
-
-        t_state.combinedMeshes[lodLevel].vertices.insert(t_state.combinedMeshes[lodLevel].vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
-        t_state.combinedMeshes[lodLevel].indices.insert(t_state.combinedMeshes[lodLevel].indices.end(), mesh.indices.begin(), mesh.indices.end());
+        t_state.combinedMeshes[lodLevel].vertices.insert(
+          t_state.combinedMeshes[lodLevel].vertices.end(),
+          mesh.vertices.begin(),
+          mesh.vertices.end());
+        t_state.combinedMeshes[lodLevel].indices.insert(
+          t_state.combinedMeshes[lodLevel].indices.end(),
+          mesh.indices.begin(),
+          mesh.indices.end());
       }
     }
 

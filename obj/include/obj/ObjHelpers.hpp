@@ -28,7 +28,7 @@ namespace obj
   struct Vertex
   {
     Vertex(const glm::vec3& t_pos, const glm::vec3& t_norm, const glm::vec2& t_uv) : position(t_pos),
-                                                                                     packedNormal(PackNormal_2_10_10_10(t_norm)),
+                                                                                     packedNormal(PackNormal_2_10_10_10_REV(t_norm)),
                                                                                      texCoords(t_uv), tangent() {}
 
     glm::vec3     position;
@@ -36,7 +36,7 @@ namespace obj
     glm::vec2     texCoords;
     glm::vec4     tangent;
 
-    static std::uint32_t PackNormal_2_10_10_10(const glm::vec3& t_norm) {
+    static std::uint32_t PackNormal_2_10_10_10_REV(const glm::vec3& t_norm) {
       // Clamp and scale to signed 10-bit range
       auto clamp10 = [] (float t_v) -> int32_t
       {
