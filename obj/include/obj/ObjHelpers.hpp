@@ -27,15 +27,29 @@ namespace obj
 
   struct Vertex
   {
-    Vertex(const glm::vec3& t_pos, const glm::vec3& t_norm, const glm::vec2& t_uv) : position(t_pos), normal(t_norm),
-                                                                                     packedNormal(0), texCoords(t_uv),
+    Vertex(const glm::vec3& t_pos, const glm::vec3& t_norm, const glm::vec2& t_uv) : position(t_pos), packedNormal(PackNormal_2_10_10_10(t_norm)), texCoords(t_uv),
                                                                                      tangent() {}
 
     glm::vec3     position;
-    glm::vec3     normal;
     std::uint32_t packedNormal;
     glm::vec2     texCoords;
     glm::vec4     tangent;
+
+    static std::uint32_t PackNormal_2_10_10_10(const glm::vec3& t_norm) {
+      // Clamp and scale to signed 10-bit range
+      auto clamp10 = [](float t_v) -> int32_t {
+        t_v = glm::clamp(t_v, -1.0f, 1.0f);
+        return static_cast<int32_t>(round(t_v * 511.0f)) & 0x3FF;
+      };
+      
+      const uint32_t x = static_cast<uint32_t>(clamp10(t_norm.x));
+      const uint32_t y = static_cast<uint32_t>(clamp10(t_norm.y));
+      const uint32_t z = static_cast<uint32_t>(clamp10(t_norm.z));
+      constexpr uint32_t w = 0; // optional fourth component
+
+      return (w << 30) | (z << 20) | (y << 10) | x;
+    }
+
 
     template <typename T>
     [[nodiscard]] static constexpr bool VecEqual(const T& t_x, const T& t_y) {
@@ -44,7 +58,7 @@ namespace obj
 
     // == operator override for calculateTriangle
     bool operator==(const Vertex& t_other) const {
-      return VecEqual(position, t_other.position) && VecEqual(normal, t_other.normal) && VecEqual(texCoords, t_other.texCoords) &&
+      return VecEqual(position, t_other.position) && packedNormal == t_other.packedNormal && VecEqual(texCoords, t_other.texCoords) &&
         VecEqual(tangent, t_other.tangent) && std::abs(tangent.w - t_other.tangent.w) < 1e-6f;
     }
 
@@ -57,8 +71,7 @@ namespace obj
     }
 
     [[nodiscard]] auto AsArrayQuantized() const noexcept {
-      return std::array{Quantize(position.x), Quantize(position.y), Quantize(position.z), Quantize(normal.x), Quantize(normal.y),
-                        Quantize(normal.z), Quantize(texCoords.x), Quantize(texCoords.y), Quantize(tangent.x),
+      return std::array{Quantize(position.x), Quantize(position.y), Quantize(position.z), Quantize(texCoords.x), Quantize(texCoords.y), Quantize(tangent.x),
                         Quantize(tangent.y), Quantize(tangent.z), Quantize(tangent.w)};
     }
 
@@ -85,9 +98,7 @@ namespace obj
       hashCombine(Quantize(t_v.position.x));
       hashCombine(Quantize(t_v.position.y));
       hashCombine(Quantize(t_v.position.z));
-      hashCombine(Quantize(t_v.normal.x));
-      hashCombine(Quantize(t_v.normal.y));
-      hashCombine(Quantize(t_v.normal.z));
+      hashCombine(t_v.packedNormal);
       hashCombine(Quantize(t_v.texCoords.x));
       hashCombine(Quantize(t_v.texCoords.y));
       hashCombine(Quantize(t_v.tangent.x));
@@ -103,8 +114,7 @@ namespace obj
   {
     bool operator()(const Vertex& t_a, const Vertex& t_b) const noexcept {
       constexpr float eps = 1e-6f;
-      return glm::all(glm::lessThan(glm::abs(t_a.position - t_b.position), glm::vec3(eps))) && glm::all(
-        glm::lessThan(glm::abs(t_a.normal - t_b.normal), glm::vec3(eps))) && glm::all(
+      return glm::all(glm::lessThan(glm::abs(t_a.position - t_b.position), glm::vec3(eps))) && t_a.packedNormal == t_b.packedNormal && glm::all(
         glm::lessThan(glm::abs(t_a.texCoords - t_b.texCoords), glm::vec2(eps))) && glm::all(
         glm::lessThan(glm::abs(t_a.tangent - t_b.tangent), glm::vec4(eps)));
     }
